@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entidade que representa um Produto do cardápio (ex: X-Burguer, Batata Frita, Coca-Cola).
@@ -52,6 +54,14 @@ public class Produto implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "produtos_opcoes",
+        joinColumns = @JoinColumn(name = "produto_id"),
+        inverseJoinColumns = @JoinColumn(name = "opcao_id")
+    )
+    private Set<OpcaoAdicional> opcoesDisponiveis = new HashSet<>();
 
     public Produto() {
     }
@@ -138,6 +148,33 @@ public class Produto implements Serializable {
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public Set<OpcaoAdicional> getOpcoesDisponiveis() {
+        return opcoesDisponiveis;
+    }
+
+    public void setOpcoesDisponiveis(Set<OpcaoAdicional> opcoesDisponiveis) {
+        this.opcoesDisponiveis = opcoesDisponiveis != null ? opcoesDisponiveis : new HashSet<>();
+    }
+
+    public void adicionarOpcao(OpcaoAdicional opcao) {
+        if (this.opcoesDisponiveis == null) {
+            this.opcoesDisponiveis = new HashSet<>();
+        }
+        this.opcoesDisponiveis.add(opcao);
+        if (opcao != null && opcao.getProdutos() != null) {
+            opcao.getProdutos().add(this);
+        }
+    }
+
+    public void removerOpcao(OpcaoAdicional opcao) {
+        if (this.opcoesDisponiveis != null) {
+            this.opcoesDisponiveis.remove(opcao);
+            if (opcao != null && opcao.getProdutos() != null) {
+                opcao.getProdutos().remove(this);
+            }
+        }
     }
 
     @Override
