@@ -1,6 +1,7 @@
 package com.restaurante.pdv.dto.request;
 
 import com.restaurante.pdv.model.entity.FormaPagamento;
+import com.restaurante.pdv.validation.CpfValido;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 
@@ -24,6 +25,7 @@ public class NovoPedidoDTO implements Serializable {
 
     private String nomeCliente;
 
+    @CpfValido
     private String cpfCliente;
 
     public NovoPedidoDTO() {

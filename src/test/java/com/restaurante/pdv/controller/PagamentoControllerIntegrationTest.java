@@ -79,7 +79,7 @@ class PagamentoControllerIntegrationTest {
         pedido.setStatus(StatusPedido.RECEBIDO);
         pedido.setFormaPagamento(FormaPagamento.PIX);
         pedido.setNomeCliente("Isabelly");
-        pedido.setCpfCliente("123.456.789-00");
+        pedido.setCpfCliente("529.982.247-25");
         pedido.setPago(Boolean.FALSE);
 
         ItemPedido item = new ItemPedido();

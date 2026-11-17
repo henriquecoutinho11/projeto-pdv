@@ -20,6 +20,7 @@ public class PedidoResponseDTO implements Serializable {
 
     private Long id;
     private Integer numeroSenha;
+    private String senhaFormatada;
     private LocalDateTime dataHora;
     private StatusPedido status;
     private FormaPagamento formaPagamento;
@@ -40,6 +41,7 @@ public class PedidoResponseDTO implements Serializable {
                              String nomeCliente, String cpfCliente, List<ItemPedidoResponseDTO> itens) {
         this.id = id;
         this.numeroSenha = numeroSenha;
+        this.senhaFormatada = com.restaurante.pdv.model.service.SenhaSequencialService.formatarSenha(numeroSenha);
         this.dataHora = dataHora;
         this.status = status;
         this.formaPagamento = formaPagamento;
@@ -76,6 +78,9 @@ public class PedidoResponseDTO implements Serializable {
         dto.setPago(pedido.isPago());
         dto.setDataHoraPagamento(pedido.getDataHoraPagamento());
         dto.setCodigoTransacao(pedido.getCodigoTransacao());
+        if (pedido.getNumeroSenha() != null) {
+            dto.setSenhaFormatada(com.restaurante.pdv.model.service.SenhaSequencialService.formatarSenha(pedido.getNumeroSenha()));
+        }
         return dto;
     }
 
@@ -93,6 +98,20 @@ public class PedidoResponseDTO implements Serializable {
 
     public void setNumeroSenha(Integer numeroSenha) {
         this.numeroSenha = numeroSenha;
+        if (numeroSenha != null) {
+            this.senhaFormatada = com.restaurante.pdv.model.service.SenhaSequencialService.formatarSenha(numeroSenha);
+        }
+    }
+
+    public String getSenhaFormatada() {
+        if (senhaFormatada == null && numeroSenha != null) {
+            return com.restaurante.pdv.model.service.SenhaSequencialService.formatarSenha(numeroSenha);
+        }
+        return senhaFormatada;
+    }
+
+    public void setSenhaFormatada(String senhaFormatada) {
+        this.senhaFormatada = senhaFormatada;
     }
 
     public LocalDateTime getDataHora() {

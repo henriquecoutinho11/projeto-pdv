@@ -11,6 +11,7 @@ import com.restaurante.pdv.model.repository.OpcaoAdicionalRepository;
 import com.restaurante.pdv.model.repository.PedidoRepository;
 import com.restaurante.pdv.model.repository.ProdutoRepository;
 import com.restaurante.pdv.model.service.PedidoService;
+import com.restaurante.pdv.model.service.SenhaSequencialService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ class PedidoServiceTest {
     @Mock
     private OpcaoAdicionalRepository opcaoAdicionalRepository;
 
-    @InjectMocks
+    private SenhaSequencialService senhaSequencialService;
     private PedidoService pedidoService;
 
     private Produto burguer;
@@ -56,6 +57,9 @@ class PedidoServiceTest {
 
     @BeforeEach
     void setUp() {
+        senhaSequencialService = new SenhaSequencialService(pedidoRepository);
+        pedidoService = new PedidoService(pedidoRepository, produtoRepository, opcaoAdicionalRepository, senhaSequencialService);
+
         Categoria catLanches = new Categoria(1L, "Hambúrgueres", "Lanches", true);
         Categoria catCombos = new Categoria(2L, "Combos", "Combos", true);
 
@@ -271,7 +275,7 @@ class PedidoServiceTest {
         item2.setTamanhoBatataId(11L);
         item2.setBebidaId(21L);
 
-        NovoPedidoDTO novoPedido = new NovoPedidoDTO(List.of(item1, item2), FormaPagamento.PIX, "Henrique", "12345678900");
+        NovoPedidoDTO novoPedido = new NovoPedidoDTO(List.of(item1, item2), FormaPagamento.PIX, "Henrique", "52998224725");
 
         when(produtoRepository.findById(10L)).thenReturn(Optional.of(burguer));
         when(produtoRepository.findById(20L)).thenReturn(Optional.of(combo));
@@ -292,7 +296,7 @@ class PedidoServiceTest {
         assertEquals(StatusPedido.RECEBIDO, response.getStatus());
         assertEquals(FormaPagamento.PIX, response.getFormaPagamento());
         assertEquals("Henrique", response.getNomeCliente());
-        assertEquals("12345678900", response.getCpfCliente());
+        assertEquals("529.982.247-25", response.getCpfCliente());
         assertEquals(2, response.getItens().size());
         assertEquals(3, response.getQuantidadeItens());
 
@@ -395,5 +399,39 @@ class PedidoServiceTest {
         assertEquals(StatusPedido.EM_PREPARO, response.getStatus());
         verify(pedidoRepository, times(1)).save(pedido);
     }
+
+    @Test
+    @DisplayName("Deve rejeitar criação de pedido quando CPF for informado com valor inválido")
+    void deveRejeitarPedidoComCpfInvalido() {
+        CustomizacaoItemDTO item = new CustomizacaoItemDTO(10L, 1);
+        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item), FormaPagamento.PIX, "João Silva", "123.456.789-99");
+
+        NegocioException ex = assertThrows(NegocioException.class, () -> pedidoService.processarNovoPedido(dto));
+        assertTrue(ex.getMessage().contains("CPF informado é inválido"));
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve aceitar pedido com CPF válido formatando-o e gerando a senha sequencial diária")
+    void deveCriarPedidoComCpfValidoESenhaSequencial() {
+        CustomizacaoItemDTO item = new CustomizacaoItemDTO(10L, 1);
+        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item), FormaPagamento.PIX, "Maria Santos", "52998224725");
+
+        when(produtoRepository.findById(10L)).thenReturn(Optional.of(burguer));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocation -> {
+            Pedido p = invocation.getArgument(0);
+            p.setId(100L);
+            return p;
+        });
+
+        PedidoResponseDTO response = pedidoService.processarNovoPedido(dto);
+
+        assertNotNull(response);
+        assertEquals("Maria Santos", response.getNomeCliente());
+        assertEquals("529.982.247-25", response.getCpfCliente());
+        assertNotNull(response.getNumeroSenha());
+        assertEquals("#001", response.getSenhaFormatada());
+    }
 }
+
 
