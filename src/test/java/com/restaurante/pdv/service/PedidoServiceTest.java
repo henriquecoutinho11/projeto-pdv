@@ -363,5 +363,37 @@ class PedidoServiceTest {
         assertEquals(StatusPedido.RECEBIDO, lista.get(0).getStatus());
         assertEquals(StatusPedido.RECEBIDO, lista.get(1).getStatus());
     }
+
+    @Test
+    @DisplayName("Não deve permitir alterar status para EM_PREPARO quando pedido não estiver pago")
+    void naoDevePermitirAlterarStatusParaPreparoSemPagamento() {
+        Pedido pedido = new Pedido(300L, 10, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("35.00"), "Cliente", null);
+        pedido.setPago(Boolean.FALSE);
+
+        when(pedidoRepository.findById(300L)).thenReturn(Optional.of(pedido));
+
+        NegocioException ex = assertThrows(NegocioException.class, () ->
+                pedidoService.atualizarStatus(300L, StatusPedido.EM_PREPARO)
+        );
+
+        assertTrue(ex.getMessage().contains("não pode ter status alterado para preparo na cozinha antes da confirmação do pagamento"));
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve permitir alterar status para EM_PREPARO após confirmação do pagamento")
+    void devePermitirAlterarStatusParaPreparoAposPagamento() {
+        Pedido pedido = new Pedido(301L, 11, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("35.00"), "Cliente", null);
+        pedido.setPago(Boolean.TRUE);
+
+        when(pedidoRepository.findById(301L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PedidoResponseDTO response = pedidoService.atualizarStatus(301L, StatusPedido.EM_PREPARO);
+
+        assertNotNull(response);
+        assertEquals(StatusPedido.EM_PREPARO, response.getStatus());
+        verify(pedidoRepository, times(1)).save(pedido);
+    }
 }
 

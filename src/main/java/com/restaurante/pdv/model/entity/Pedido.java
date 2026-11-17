@@ -54,6 +54,15 @@ public class Pedido implements Serializable {
     @Column(name = "cpf_cliente", length = 20)
     private String cpfCliente;
 
+    @Column(name = "pago", nullable = false)
+    private Boolean pago = Boolean.FALSE;
+
+    @Column(name = "data_hora_pagamento")
+    private LocalDateTime dataHoraPagamento;
+
+    @Column(name = "codigo_transacao", length = 100)
+    private String codigoTransacao;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedido> itens = new ArrayList<>();
 
@@ -161,6 +170,34 @@ public class Pedido implements Serializable {
 
     public void setCpfCliente(String cpfCliente) {
         this.cpfCliente = cpfCliente;
+    }
+
+    public Boolean getPago() {
+        return pago;
+    }
+
+    public boolean isPago() {
+        return Boolean.TRUE.equals(pago);
+    }
+
+    public void setPago(Boolean pago) {
+        this.pago = pago != null ? pago : Boolean.FALSE;
+    }
+
+    public LocalDateTime getDataHoraPagamento() {
+        return dataHoraPagamento;
+    }
+
+    public void setDataHoraPagamento(LocalDateTime dataHoraPagamento) {
+        this.dataHoraPagamento = dataHoraPagamento;
+    }
+
+    public String getCodigoTransacao() {
+        return codigoTransacao;
+    }
+
+    public void setCodigoTransacao(String codigoTransacao) {
+        this.codigoTransacao = codigoTransacao;
     }
 
     public List<ItemPedido> getItens() {

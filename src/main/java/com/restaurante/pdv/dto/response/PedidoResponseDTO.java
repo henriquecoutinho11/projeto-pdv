@@ -26,6 +26,9 @@ public class PedidoResponseDTO implements Serializable {
     private BigDecimal valorTotal;
     private String nomeCliente;
     private String cpfCliente;
+    private Boolean pago = Boolean.FALSE;
+    private LocalDateTime dataHoraPagamento;
+    private String codigoTransacao;
     private List<ItemPedidoResponseDTO> itens = new ArrayList<>();
     private Integer quantidadeItens;
 
@@ -59,7 +62,7 @@ public class PedidoResponseDTO implements Serializable {
                 ? pedido.getItens().stream().map(ItemPedidoResponseDTO::deEntidade).collect(Collectors.toList())
                 : new ArrayList<>();
 
-        return new PedidoResponseDTO(
+        PedidoResponseDTO dto = new PedidoResponseDTO(
                 pedido.getId(),
                 pedido.getNumeroSenha(),
                 pedido.getDataHora(),
@@ -70,6 +73,10 @@ public class PedidoResponseDTO implements Serializable {
                 pedido.getCpfCliente(),
                 itensDTO
         );
+        dto.setPago(pedido.isPago());
+        dto.setDataHoraPagamento(pedido.getDataHoraPagamento());
+        dto.setCodigoTransacao(pedido.getCodigoTransacao());
+        return dto;
     }
 
     public Long getId() {
@@ -145,6 +152,34 @@ public class PedidoResponseDTO implements Serializable {
         this.quantidadeItens = this.itens.stream()
                 .mapToInt(ItemPedidoResponseDTO::getQuantidade)
                 .sum();
+    }
+
+    public Boolean getPago() {
+        return pago;
+    }
+
+    public boolean isPago() {
+        return Boolean.TRUE.equals(pago);
+    }
+
+    public void setPago(Boolean pago) {
+        this.pago = pago;
+    }
+
+    public LocalDateTime getDataHoraPagamento() {
+        return dataHoraPagamento;
+    }
+
+    public void setDataHoraPagamento(LocalDateTime dataHoraPagamento) {
+        this.dataHoraPagamento = dataHoraPagamento;
+    }
+
+    public String getCodigoTransacao() {
+        return codigoTransacao;
+    }
+
+    public void setCodigoTransacao(String codigoTransacao) {
+        this.codigoTransacao = codigoTransacao;
     }
 
     public Integer getQuantidadeItens() {

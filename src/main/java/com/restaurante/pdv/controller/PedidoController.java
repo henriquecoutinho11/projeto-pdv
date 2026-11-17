@@ -66,6 +66,22 @@ public class PedidoController {
     }
 
     /**
+     * Atualiza o status operacional de um pedido, respeitando regras de pagamento prévio para preparo na cozinha.
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<PedidoResponseDTO> atualizarStatus(
+            @PathVariable Long id,
+            @RequestParam(required = false) StatusPedido status,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        StatusPedido novoStatus = status;
+        if (novoStatus == null && body != null && body.containsKey("status")) {
+            novoStatus = StatusPedido.valueOf(body.get("status"));
+        }
+        PedidoResponseDTO response = pedidoService.atualizarStatus(id, novoStatus);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Endpoint para cálculo e pré-visualização de um item customizado antes da inclusão no pedido/carrinho.
      */
     @PostMapping("/calcular-item")
