@@ -125,6 +125,34 @@ public class PedidoService {
     }
 
     /**
+     * Atualiza o status operacional do pedido garantindo a regra de negócio do fluxo de pagamentos:
+     * O pedido só pode ter o status alterado para preparo na cozinha (EM_PREPARO, PRONTO, ENTREGUE)
+     * após a confirmação do pagamento ter sido efetuada.
+     *
+     * @param pedidoId identificador do pedido.
+     * @param novoStatus novo status a ser aplicado.
+     * @return DTO com os dados atualizados do pedido.
+     */
+    @Transactional
+    public PedidoResponseDTO atualizarStatus(Long pedidoId, StatusPedido novoStatus) {
+        if (novoStatus == null) {
+            throw new NegocioException("O novo status do pedido é obrigatório.");
+        }
+
+        Pedido pedido = buscarEntidadePorId(pedidoId);
+
+        if (novoStatus == StatusPedido.EM_PREPARO || novoStatus == StatusPedido.PRONTO || novoStatus == StatusPedido.ENTREGUE) {
+            if (!pedido.isPago()) {
+                throw new NegocioException("O pedido não pode ter status alterado para preparo na cozinha antes da confirmação do pagamento.");
+            }
+        }
+
+        pedido.setStatus(novoStatus);
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+        return PedidoResponseDTO.deEntidade(pedidoSalvo);
+    }
+
+    /**
      * Valida os dados de customização enviados pelo cliente, recupera preços e regras estritas do banco de dados,
      * calcula o subtotal e retorna o DTO discriminado para exibição no Totem/Carrinho.
      *
