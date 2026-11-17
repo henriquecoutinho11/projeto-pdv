@@ -1,7 +1,9 @@
 package com.restaurante.pdv.service;
 
 import com.restaurante.pdv.dto.request.CustomizacaoItemDTO;
+import com.restaurante.pdv.dto.request.NovoPedidoDTO;
 import com.restaurante.pdv.dto.response.ItemPedidoResponseDTO;
+import com.restaurante.pdv.dto.response.PedidoResponseDTO;
 import com.restaurante.pdv.exception.NegocioException;
 import com.restaurante.pdv.exception.RecursoNaoEncontradoException;
 import com.restaurante.pdv.model.entity.*;
@@ -255,6 +257,111 @@ class PedidoServiceTest {
         dto.setQuantidade(0);
 
         assertThrows(NegocioException.class, () -> pedidoService.calcularItem(dto));
+    }
+
+    @Test
+    @DisplayName("Deve processar novo pedido com sucesso, debitar estoque e calcular total estritamente no servidor")
+    void deveProcessarNovoPedidoComSucessoEDebitarEstoque() {
+        // Item 1: 2 burguers com bacon (+3.50 cada) -> unit: 22.90 + 3.50 = 26.40, subtotal: 52.80
+        CustomizacaoItemDTO item1 = new CustomizacaoItemDTO(10L, 2);
+        item1.setAdicionaisIds(List.of(1L)); // Bacon
+
+        // Item 2: 1 combo com batata grande (+4.00) e suco (+2.50) -> unit: 42.00 + 6.50 = 48.50, subtotal: 48.50
+        CustomizacaoItemDTO item2 = new CustomizacaoItemDTO(20L, 1);
+        item2.setTamanhoBatataId(11L);
+        item2.setBebidaId(21L);
+
+        NovoPedidoDTO novoPedido = new NovoPedidoDTO(List.of(item1, item2), FormaPagamento.PIX, "Henrique", "12345678900");
+
+        when(produtoRepository.findById(10L)).thenReturn(Optional.of(burguer));
+        when(produtoRepository.findById(20L)).thenReturn(Optional.of(combo));
+        when(opcaoAdicionalRepository.findById(1L)).thenReturn(Optional.of(bacon));
+        when(opcaoAdicionalRepository.findById(11L)).thenReturn(Optional.of(batataGrande));
+        when(opcaoAdicionalRepository.findById(21L)).thenReturn(Optional.of(sucoLaranja));
+
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocation -> {
+            Pedido p = invocation.getArgument(0);
+            p.setId(100L);
+            return p;
+        });
+
+        PedidoResponseDTO response = pedidoService.processarNovoPedido(novoPedido);
+
+        assertNotNull(response);
+        assertEquals(100L, response.getId());
+        assertEquals(StatusPedido.RECEBIDO, response.getStatus());
+        assertEquals(FormaPagamento.PIX, response.getFormaPagamento());
+        assertEquals("Henrique", response.getNomeCliente());
+        assertEquals("12345678900", response.getCpfCliente());
+        assertEquals(2, response.getItens().size());
+        assertEquals(3, response.getQuantidadeItens());
+
+        // Total: 52.80 + 48.50 = 101.30
+        assertEquals(new BigDecimal("101.30"), response.getValorTotal());
+
+        // Validação de estoque debitado
+        assertEquals(48, burguer.getQuantidadeEstoque()); // 50 - 2 = 48
+        assertEquals(29, combo.getQuantidadeEstoque());   // 30 - 1 = 29
+        verify(produtoRepository, times(1)).save(burguer);
+        verify(produtoRepository, times(1)).save(combo);
+        verify(pedidoRepository, times(1)).save(any(Pedido.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar NegocioException quando estoque do produto for insuficiente")
+    void deveLancarExcecaoQuandoEstoqueInsuficiente() {
+        burguer.setQuantidadeEstoque(1); // apenas 1 em estoque
+        CustomizacaoItemDTO item = new CustomizacaoItemDTO(10L, 2); // solicita 2
+        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item));
+
+        when(produtoRepository.findById(10L)).thenReturn(Optional.of(burguer));
+
+        NegocioException ex = assertThrows(NegocioException.class, () -> pedidoService.processarNovoPedido(dto));
+        assertTrue(ex.getMessage().contains("Estoque insuficiente"));
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar NegocioException quando pedido não contiver itens ou for nulo")
+    void deveLancarExcecaoQuandoPedidoSemItens() {
+        assertThrows(NegocioException.class, () -> pedidoService.processarNovoPedido(null));
+        assertThrows(NegocioException.class, () -> pedidoService.processarNovoPedido(new NovoPedidoDTO(List.of())));
+    }
+
+    @Test
+    @DisplayName("Deve buscar pedido por ID com sucesso")
+    void deveBuscarPedidoPorIdComSucesso() {
+        Pedido pedido = new Pedido(200L, 5, null, StatusPedido.RECEBIDO, FormaPagamento.CARTAO_CREDITO, new BigDecimal("45.00"), "Cliente", null);
+        when(pedidoRepository.findById(200L)).thenReturn(Optional.of(pedido));
+
+        PedidoResponseDTO response = pedidoService.buscarPorId(200L);
+
+        assertNotNull(response);
+        assertEquals(200L, response.getId());
+        assertEquals(StatusPedido.RECEBIDO, response.getStatus());
+    }
+
+    @Test
+    @DisplayName("Deve lançar RecursoNaoEncontradoException ao buscar pedido inexistente")
+    void deveLancarExcecaoAoBuscarPedidoInexistente() {
+        when(pedidoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNaoEncontradoException.class, () -> pedidoService.buscarPorId(999L));
+    }
+
+    @Test
+    @DisplayName("Deve buscar pedidos filtrados por status")
+    void deveBuscarPedidosPorStatus() {
+        Pedido p1 = new Pedido(1L, 1, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("20.00"), null, null);
+        Pedido p2 = new Pedido(2L, 2, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("30.00"), null, null);
+
+        when(pedidoRepository.findByStatus(StatusPedido.RECEBIDO)).thenReturn(List.of(p1, p2));
+
+        List<PedidoResponseDTO> lista = pedidoService.buscarPorStatus(StatusPedido.RECEBIDO);
+
+        assertEquals(2, lista.size());
+        assertEquals(StatusPedido.RECEBIDO, lista.get(0).getStatus());
+        assertEquals(StatusPedido.RECEBIDO, lista.get(1).getStatus());
     }
 }
 

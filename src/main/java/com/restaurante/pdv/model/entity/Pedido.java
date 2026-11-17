@@ -168,8 +168,12 @@ public class Pedido implements Serializable {
     }
 
     public void setItens(List<ItemPedido> itens) {
-        this.itens = itens != null ? itens : new ArrayList<>();
-        recalcularTotal();
+        this.itens = new ArrayList<>();
+        if (itens != null) {
+            itens.forEach(this::adicionarItem);
+        } else {
+            recalcularTotal();
+        }
     }
 
     @Override
