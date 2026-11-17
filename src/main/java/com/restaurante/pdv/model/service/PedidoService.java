@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import com.restaurante.pdv.validation.CpfValidoValidator;
+
 /**
  * Serviço responsável pelas regras de negócio de pedidos e motor de customização de lanches/combos (McDonald's Style).
  */
@@ -28,13 +31,23 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
     private final OpcaoAdicionalRepository opcaoAdicionalRepository;
+    private final SenhaSequencialService senhaSequencialService;
 
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
                          OpcaoAdicionalRepository opcaoAdicionalRepository) {
+        this(pedidoRepository, produtoRepository, opcaoAdicionalRepository, new SenhaSequencialService(pedidoRepository));
+    }
+
+    @Autowired
+    public PedidoService(PedidoRepository pedidoRepository,
+                         ProdutoRepository produtoRepository,
+                         OpcaoAdicionalRepository opcaoAdicionalRepository,
+                         SenhaSequencialService senhaSequencialService) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.opcaoAdicionalRepository = opcaoAdicionalRepository;
+        this.senhaSequencialService = senhaSequencialService;
     }
 
     /**
@@ -55,12 +68,24 @@ public class PedidoService {
             throw new NegocioException("O pedido deve conter pelo menos um item.");
         }
 
+        if (dto.getCpfCliente() != null && !dto.getCpfCliente().isBlank()) {
+            if (!CpfValidoValidator.isCpfValido(dto.getCpfCliente())) {
+                throw new NegocioException("O CPF informado é inválido.");
+            }
+        }
+
         Pedido pedido = new Pedido();
         pedido.setStatus(StatusPedido.RECEBIDO);
         pedido.setDataHora(LocalDateTime.now());
         pedido.setFormaPagamento(dto.getFormaPagamento());
         pedido.setNomeCliente(dto.getNomeCliente());
-        pedido.setCpfCliente(dto.getCpfCliente());
+
+        String cpfFormatado = CpfValidoValidator.formatarCpf(dto.getCpfCliente());
+        pedido.setCpfCliente(cpfFormatado != null ? cpfFormatado : dto.getCpfCliente());
+
+        // Atribuir número de senha sequencial diária
+        Integer numeroSenha = senhaSequencialService.gerarProximaSenha();
+        pedido.setNumeroSenha(numeroSenha);
 
         for (CustomizacaoItemDTO itemDto : dto.getItens()) {
             ItemPedido item = montarItemPedido(itemDto);

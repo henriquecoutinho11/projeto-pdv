@@ -97,7 +97,7 @@ class PedidoControllerIntegrationTest {
         CustomizacaoItemDTO item2 = new CustomizacaoItemDTO(combo.getId(), 1);
         item2.setTamanhoBatataId(batataGrande.getId()); // 40.00 + 5.00 = 45.00 * 1 = 45.00
 
-        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item1, item2), FormaPagamento.PIX, "Carlos Antunes", "123.456.789-00");
+        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item1, item2), FormaPagamento.PIX, "Carlos Antunes", "529.982.247-25");
 
         mockMvc.perform(post("/api/pedidos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +108,7 @@ class PedidoControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value("RECEBIDO"))
                 .andExpect(jsonPath("$.formaPagamento").value("PIX"))
                 .andExpect(jsonPath("$.nomeCliente").value("Carlos Antunes"))
-                .andExpect(jsonPath("$.cpfCliente").value("123.456.789-00"))
+                .andExpect(jsonPath("$.cpfCliente").value("529.982.247-25"))
                 .andExpect(jsonPath("$.valorTotal").value(103.00)) // 58.00 + 45.00 = 103.00
                 .andExpect(jsonPath("$.quantidadeItens").value(3))
                 .andExpect(jsonPath("$.itens", hasSize(2)))
