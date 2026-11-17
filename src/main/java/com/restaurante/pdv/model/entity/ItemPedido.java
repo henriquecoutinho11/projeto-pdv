@@ -145,7 +145,10 @@ public class ItemPedido implements Serializable {
     }
 
     public void setOpcoes(List<ItemPedidoOpcao> opcoes) {
-        this.opcoes = opcoes != null ? opcoes : new ArrayList<>();
+        this.opcoes = new ArrayList<>();
+        if (opcoes != null) {
+            opcoes.forEach(this::adicionarOpcao);
+        }
     }
 
     @Override

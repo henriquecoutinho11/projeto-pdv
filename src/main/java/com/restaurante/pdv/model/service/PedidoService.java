@@ -1,7 +1,9 @@
 package com.restaurante.pdv.model.service;
 
 import com.restaurante.pdv.dto.request.CustomizacaoItemDTO;
+import com.restaurante.pdv.dto.request.NovoPedidoDTO;
 import com.restaurante.pdv.dto.response.ItemPedidoResponseDTO;
+import com.restaurante.pdv.dto.response.PedidoResponseDTO;
 import com.restaurante.pdv.exception.NegocioException;
 import com.restaurante.pdv.exception.RecursoNaoEncontradoException;
 import com.restaurante.pdv.model.entity.*;
@@ -12,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Serviço responsável pelas regras de negócio de pedidos e motor de customização de lanches/combos (McDonald's Style).
@@ -31,6 +35,93 @@ public class PedidoService {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.opcaoAdicionalRepository = opcaoAdicionalRepository;
+    }
+
+    /**
+     * Processa atomicamente o fechamento de um novo pedido no PDV/Totem.
+     * Valida os itens, a integridade dos produtos e o estoque disponível, debita as quantidades em estoque,
+     * recalcula os valores estritamente no servidor e persiste o pedido e seus itens associados.
+     *
+     * @param dto dados de submissão do pedido contendo a lista de itens customizados.
+     * @return DTO detalhado com os dados completos do pedido persistido com status inicial RECEBIDO.
+     */
+    @Transactional
+    public PedidoResponseDTO processarNovoPedido(NovoPedidoDTO dto) {
+        if (dto == null) {
+            throw new NegocioException("Os dados do pedido são obrigatórios.");
+        }
+
+        if (dto.getItens() == null || dto.getItens().isEmpty()) {
+            throw new NegocioException("O pedido deve conter pelo menos um item.");
+        }
+
+        Pedido pedido = new Pedido();
+        pedido.setStatus(StatusPedido.RECEBIDO);
+        pedido.setDataHora(LocalDateTime.now());
+        pedido.setFormaPagamento(dto.getFormaPagamento());
+        pedido.setNomeCliente(dto.getNomeCliente());
+        pedido.setCpfCliente(dto.getCpfCliente());
+
+        for (CustomizacaoItemDTO itemDto : dto.getItens()) {
+            ItemPedido item = montarItemPedido(itemDto);
+
+            // Validar integridade e debitar estoque do produto
+            Produto produto = item.getProduto();
+            int quantidadeSolicitada = item.getQuantidade();
+            Integer estoqueAtual = produto.getQuantidadeEstoque();
+
+            if (estoqueAtual == null || estoqueAtual < quantidadeSolicitada) {
+                throw new NegocioException(String.format(
+                        "Estoque insuficiente para o produto '%s'. Disponível: %d, Solicitado: %d.",
+                        produto.getNome(),
+                        estoqueAtual != null ? estoqueAtual : 0,
+                        quantidadeSolicitada
+                ));
+            }
+
+            produto.setQuantidadeEstoque(estoqueAtual - quantidadeSolicitada);
+            produtoRepository.save(produto);
+
+            pedido.adicionarItem(item);
+        }
+
+        pedido.recalcularTotal();
+
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+        return PedidoResponseDTO.deEntidade(pedidoSalvo);
+    }
+
+    /**
+     * Retorna todos os pedidos registrados no sistema.
+     */
+    public List<PedidoResponseDTO> listarTodos() {
+        return pedidoRepository.findAll().stream()
+                .map(PedidoResponseDTO::deEntidade)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Busca um pedido por ID e retorna seu DTO detalhado.
+     */
+    public PedidoResponseDTO buscarPorId(Long id) {
+        return PedidoResponseDTO.deEntidade(buscarEntidadePorId(id));
+    }
+
+    /**
+     * Busca a entidade Pedido por ID ou lança RecursoNaoEncontradoException.
+     */
+    public Pedido buscarEntidadePorId(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido", id));
+    }
+
+    /**
+     * Retorna os pedidos filtrados por status (ex: RECEBIDO, EM_PREPARO, PRONTO).
+     */
+    public List<PedidoResponseDTO> buscarPorStatus(StatusPedido status) {
+        return pedidoRepository.findByStatus(status).stream()
+                .map(PedidoResponseDTO::deEntidade)
+                .collect(Collectors.toList());
     }
 
     /**
