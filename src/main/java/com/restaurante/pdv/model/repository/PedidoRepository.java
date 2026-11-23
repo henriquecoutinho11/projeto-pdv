@@ -16,6 +16,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByStatus(StatusPedido status);
 
+    List<Pedido> findByStatusInOrderByDataHoraAsc(java.util.Collection<StatusPedido> statuses);
+
     List<Pedido> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
 
     @org.springframework.data.jpa.repository.Query("SELECT MAX(p.numeroSenha) FROM Pedido p WHERE p.dataHora >= :inicio AND p.dataHora <= :fim")
