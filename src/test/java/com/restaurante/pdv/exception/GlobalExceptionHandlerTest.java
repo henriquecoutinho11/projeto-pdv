@@ -45,6 +45,24 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar ProblemDetail com status 422 para TransicaoStatusInvalidaException")
+    void deveTratarTransicaoStatusInvalidaException() {
+        TransicaoStatusInvalidaException exception = new TransicaoStatusInvalidaException(
+                com.restaurante.pdv.model.entity.StatusPedido.RECEBIDO,
+                com.restaurante.pdv.model.entity.StatusPedido.ENTREGUE
+        );
+        ProblemDetail problem = exceptionHandler.handleTransicaoStatusInvalida(exception);
+
+        assertNotNull(problem);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), problem.getStatus());
+        assertEquals("Transição de Status Inválida", problem.getTitle());
+        assertTrue(problem.getDetail().contains("Transição de status inválida de 'RECEBIDO' para 'ENTREGUE'"));
+        assertEquals("RECEBIDO", problem.getProperties().get("statusAtual"));
+        assertEquals("ENTREGUE", problem.getProperties().get("statusDestino"));
+        assertNotNull(problem.getProperties().get("timestamp"));
+    }
+
+    @Test
     @DisplayName("Deve retornar ProblemDetail com status 500 para exceções genéricas")
     void deveTratarExcecaoGenerica() {
         Exception exception = new RuntimeException("Erro inesperado");

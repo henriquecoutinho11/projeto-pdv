@@ -50,6 +50,14 @@ class ExceptionHandlerIntegrationTest {
             throw new RecursoNaoEncontradoException("Produto", 42L);
         }
 
+        @GetMapping("/transicao-invalida")
+        public void disparaTransicaoInvalida() {
+            throw new com.restaurante.pdv.exception.TransicaoStatusInvalidaException(
+                    com.restaurante.pdv.model.entity.StatusPedido.RECEBIDO,
+                    com.restaurante.pdv.model.entity.StatusPedido.ENTREGUE
+            );
+        }
+
         @PostMapping("/validacao")
         public void disparaValidacao(@Valid @RequestBody ExemploRequestDTO dto) {
             // Se passar na validação, não faz nada
@@ -75,6 +83,19 @@ class ExceptionHandlerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Recurso Não Encontrado"))
                 .andExpect(jsonPath("$.detail").value("Produto com identificador '42' não foi encontrado(a)."))
                 .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("Deve retornar status 422 Unprocessable Entity e ProblemDetail RFC 7807 quando TransicaoStatusInvalidaException é lançada")
+    void deveRetornarProblemDetailTransicaoInvalida() throws Exception {
+        mockMvc.perform(get("/test-erros/transicao-invalida").accept(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.title").value("Transição de Status Inválida"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("Transição de status inválida de 'RECEBIDO' para 'ENTREGUE'")))
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.statusAtual").value("RECEBIDO"))
+                .andExpect(jsonPath("$.statusDestino").value("ENTREGUE"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 

@@ -3,9 +3,11 @@ package com.restaurante.pdv.service;
 import com.restaurante.pdv.dto.request.CustomizacaoItemDTO;
 import com.restaurante.pdv.dto.request.NovoPedidoDTO;
 import com.restaurante.pdv.dto.response.ItemPedidoResponseDTO;
+import com.restaurante.pdv.dto.response.PedidoKdsResponseDTO;
 import com.restaurante.pdv.dto.response.PedidoResponseDTO;
 import com.restaurante.pdv.exception.NegocioException;
 import com.restaurante.pdv.exception.RecursoNaoEncontradoException;
+import com.restaurante.pdv.exception.TransicaoStatusInvalidaException;
 import com.restaurante.pdv.model.entity.*;
 import com.restaurante.pdv.model.repository.OpcaoAdicionalRepository;
 import com.restaurante.pdv.model.repository.PedidoRepository;
@@ -431,6 +433,106 @@ class PedidoServiceTest {
         assertEquals("529.982.247-25", response.getCpfCliente());
         assertNotNull(response.getNumeroSenha());
         assertEquals("#001", response.getSenhaFormatada());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar transição inválida de RECEBIDO diretamente para ENTREGUE")
+    void deveRejeitarTransicaoInvalidaDeRecebidoParaEntregue() {
+        Pedido pedido = new Pedido(400L, 12, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("30.00"), "Cliente", null);
+        pedido.setPago(true);
+
+        when(pedidoRepository.findById(400L)).thenReturn(Optional.of(pedido));
+
+        TransicaoStatusInvalidaException ex = assertThrows(TransicaoStatusInvalidaException.class, () ->
+                pedidoService.atualizarStatus(400L, StatusPedido.ENTREGUE)
+        );
+
+        assertTrue(ex.getMessage().contains("Transição de status inválida de 'RECEBIDO' para 'ENTREGUE'"));
+        assertEquals(StatusPedido.RECEBIDO, ex.getStatusAtual());
+        assertEquals(StatusPedido.ENTREGUE, ex.getStatusDestino());
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar transição inválida de RECEBIDO diretamente para PRONTO")
+    void deveRejeitarTransicaoInvalidaDeRecebidoParaPronto() {
+        Pedido pedido = new Pedido(401L, 13, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("30.00"), "Cliente", null);
+        pedido.setPago(true);
+
+        when(pedidoRepository.findById(401L)).thenReturn(Optional.of(pedido));
+
+        TransicaoStatusInvalidaException ex = assertThrows(TransicaoStatusInvalidaException.class, () ->
+                pedidoService.atualizarStatus(401L, StatusPedido.PRONTO)
+        );
+
+        assertTrue(ex.getMessage().contains("Transição de status inválida de 'RECEBIDO' para 'PRONTO'"));
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar qualquer transição quando pedido já se encontra ENTREGUE")
+    void deveRejeitarTransicaoDePedidoJaEntregue() {
+        Pedido pedido = new Pedido(402L, 14, null, StatusPedido.ENTREGUE, FormaPagamento.PIX, new BigDecimal("30.00"), "Cliente", null);
+        pedido.setPago(true);
+
+        when(pedidoRepository.findById(402L)).thenReturn(Optional.of(pedido));
+
+        TransicaoStatusInvalidaException ex = assertThrows(TransicaoStatusInvalidaException.class, () ->
+                pedidoService.atualizarStatus(402L, StatusPedido.EM_PREPARO)
+        );
+
+        assertTrue(ex.getMessage().contains("Transição de status inválida"));
+        verify(pedidoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve avançar status sequencialmente com sucesso no fluxo do KDS")
+    void deveAvancarStatusSequencialmenteComSucesso() {
+        Pedido pedido = new Pedido(403L, 15, null, StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("30.00"), "Cliente", null);
+        pedido.setPago(true);
+
+        when(pedidoRepository.findById(403L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // RECEBIDO -> EM_PREPARO
+        PedidoKdsResponseDTO kds1 = pedidoService.avancarStatusKds(403L);
+        assertEquals(StatusPedido.EM_PREPARO, kds1.getStatus());
+        assertEquals(StatusPedido.PRONTO, kds1.getProximoStatus());
+
+        // EM_PREPARO -> PRONTO
+        PedidoKdsResponseDTO kds2 = pedidoService.avancarStatusKds(403L);
+        assertEquals(StatusPedido.PRONTO, kds2.getStatus());
+        assertEquals(StatusPedido.ENTREGUE, kds2.getProximoStatus());
+
+        // PRONTO -> ENTREGUE
+        PedidoKdsResponseDTO kds3 = pedidoService.avancarStatusKds(403L);
+        assertEquals(StatusPedido.ENTREGUE, kds3.getStatus());
+        assertNull(kds3.getProximoStatus());
+
+        // ENTREGUE -> erro ao tentar avançar novamente
+        assertThrows(TransicaoStatusInvalidaException.class, () -> pedidoService.avancarStatusKds(403L));
+    }
+
+    @Test
+    @DisplayName("Deve listar pedidos ativos para o KDS ordenados por tempo de espera")
+    void deveListarPedidosAtivosKdsComSlaETags() {
+        Pedido p1 = new Pedido(501L, 1, java.time.LocalDateTime.now().minusMinutes(12), StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("25.00"), "Cliente 1", null);
+        p1.setPago(true);
+        Pedido p2 = new Pedido(502L, 2, java.time.LocalDateTime.now().minusMinutes(6), StatusPedido.EM_PREPARO, FormaPagamento.CARTAO_DEBITO, new BigDecimal("35.00"), "Cliente 2", null);
+        p2.setPago(true);
+        Pedido p3 = new Pedido(503L, 3, java.time.LocalDateTime.now().minusMinutes(2), StatusPedido.RECEBIDO, FormaPagamento.PIX, new BigDecimal("15.00"), "Cliente 3", null);
+        p3.setPago(true);
+
+        when(pedidoRepository.findByStatusInOrderByDataHoraAsc(any())).thenReturn(List.of(p1, p2, p3));
+
+        List<PedidoKdsResponseDTO> ativos = pedidoService.listarPedidosAtivosKds();
+
+        assertNotNull(ativos);
+        assertEquals(3, ativos.size());
+        assertEquals(501L, ativos.get(0).getId());
+        assertEquals("VERMELHO", ativos.get(0).getAlertaSla()); // > 10 min
+        assertEquals("AMARELO", ativos.get(1).getAlertaSla());  // 5-10 min
+        assertEquals("VERDE", ativos.get(2).getAlertaSla());    // < 5 min
     }
 }
 

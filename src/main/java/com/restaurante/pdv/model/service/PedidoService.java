@@ -3,9 +3,11 @@ package com.restaurante.pdv.model.service;
 import com.restaurante.pdv.dto.request.CustomizacaoItemDTO;
 import com.restaurante.pdv.dto.request.NovoPedidoDTO;
 import com.restaurante.pdv.dto.response.ItemPedidoResponseDTO;
+import com.restaurante.pdv.dto.response.PedidoKdsResponseDTO;
 import com.restaurante.pdv.dto.response.PedidoResponseDTO;
 import com.restaurante.pdv.exception.NegocioException;
 import com.restaurante.pdv.exception.RecursoNaoEncontradoException;
+import com.restaurante.pdv.exception.TransicaoStatusInvalidaException;
 import com.restaurante.pdv.model.entity.*;
 import com.restaurante.pdv.model.repository.OpcaoAdicionalRepository;
 import com.restaurante.pdv.model.repository.PedidoRepository;
@@ -171,13 +173,16 @@ public class PedidoService {
     }
 
     /**
-     * Atualiza o status operacional do pedido garantindo a regra de negócio do fluxo de pagamentos:
-     * O pedido só pode ter o status alterado para preparo na cozinha (EM_PREPARO, PRONTO, ENTREGUE)
-     * após a confirmação do pagamento ter sido efetuada.
+     * Atualiza o status operacional do pedido garantindo a máquina de estados e o fluxo de pagamentos:
+     * 1. A transição deve ser válida conforme o ciclo de vida RECEBIDO -> EM_PREPARO -> PRONTO -> ENTREGUE.
+     * 2. O pedido só pode ter o status alterado para preparo na cozinha (EM_PREPARO, PRONTO, ENTREGUE)
+     *    após a confirmação do pagamento ter sido efetuada.
      *
      * @param pedidoId identificador do pedido.
      * @param novoStatus novo status a ser aplicado.
      * @return DTO com os dados atualizados do pedido.
+     * @throws TransicaoStatusInvalidaException se a transição entre estados for ilegal.
+     * @throws NegocioException se tentar iniciar o preparo sem que o pedido esteja pago.
      */
     @Transactional
     public PedidoResponseDTO atualizarStatus(Long pedidoId, StatusPedido novoStatus) {
@@ -186,6 +191,11 @@ public class PedidoService {
         }
 
         Pedido pedido = buscarEntidadePorId(pedidoId);
+
+        // Validar máquina de estados estrita
+        if (!pedido.getStatus().podeTransitarPara(novoStatus)) {
+            throw new TransicaoStatusInvalidaException(pedido.getStatus(), novoStatus);
+        }
 
         if (novoStatus == StatusPedido.EM_PREPARO || novoStatus == StatusPedido.PRONTO || novoStatus == StatusPedido.ENTREGUE) {
             if (!pedido.isPago()) {
@@ -201,6 +211,70 @@ public class PedidoService {
         publicarEventoStatusAlterado(pedidoSalvo, statusAnterior, novoStatus);
 
         return PedidoResponseDTO.deEntidade(pedidoSalvo);
+    }
+
+    /**
+     * Avança o pedido para o próximo estágio natural do fluxo da cozinha:
+     * RECEBIDO -> EM_PREPARO -> PRONTO -> ENTREGUE.
+     *
+     * @param pedidoId identificador do pedido.
+     * @return DTO com o pedido atualizado no próximo estágio.
+     */
+    @Transactional
+    public PedidoResponseDTO avancarStatus(Long pedidoId) {
+        Pedido pedido = buscarEntidadePorId(pedidoId);
+        StatusPedido proximo = pedido.getStatus().proximoStatus();
+        if (proximo == null) {
+            throw new TransicaoStatusInvalidaException(
+                    String.format("O pedido #%d com status '%s' não possui próxima etapa no fluxo de produção.",
+                            pedidoId, pedido.getStatus())
+            );
+        }
+        return atualizarStatus(pedidoId, proximo);
+    }
+
+    /**
+     * Lista pedidos ativos para o painel operacional da cozinha (KDS).
+     * Retorna pedidos nos estados RECEBIDO e EM_PREPARO ordenados pelo tempo de espera (mais antigos primeiro).
+     *
+     * @return lista de pedidos ativos com cálculo de tempo de espera, SLA e tags de customização.
+     */
+    public List<PedidoKdsResponseDTO> listarPedidosAtivosKds() {
+        return pedidoRepository.findByStatusInOrderByDataHoraAsc(List.of(StatusPedido.RECEBIDO, StatusPedido.EM_PREPARO))
+                .stream()
+                .map(PedidoKdsResponseDTO::deEntidade)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Atualiza o status do pedido a partir de uma ação no KDS, retornando o DTO específico da cozinha.
+     * Caso o novoStatus seja nulo, avança automaticamente para a próxima etapa.
+     *
+     * @param pedidoId identificador do pedido.
+     * @param novoStatus status de destino desejado (ou null para avançar automaticamente).
+     * @return DTO específico do KDS com temporizador de SLA recalculado.
+     */
+    @Transactional
+    public PedidoKdsResponseDTO atualizarStatusKds(Long pedidoId, StatusPedido novoStatus) {
+        if (novoStatus == null) {
+            return avancarStatusKds(pedidoId);
+        }
+        PedidoResponseDTO response = atualizarStatus(pedidoId, novoStatus);
+        Pedido pedido = buscarEntidadePorId(response.getId());
+        return PedidoKdsResponseDTO.deEntidade(pedido);
+    }
+
+    /**
+     * Avança o pedido para a próxima etapa no display da cozinha (KDS).
+     *
+     * @param pedidoId identificador do pedido.
+     * @return DTO específico do KDS com o próximo estágio aplicado.
+     */
+    @Transactional
+    public PedidoKdsResponseDTO avancarStatusKds(Long pedidoId) {
+        PedidoResponseDTO response = avancarStatus(pedidoId);
+        Pedido pedido = buscarEntidadePorId(response.getId());
+        return PedidoKdsResponseDTO.deEntidade(pedido);
     }
 
     private void publicarEventoPedidoCriado(Pedido pedido) {

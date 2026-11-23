@@ -44,6 +44,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(TransicaoStatusInvalidaException.class)
+    public ProblemDetail handleTransicaoStatusInvalida(TransicaoStatusInvalidaException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problemDetail.setTitle("Transição de Status Inválida");
+        problemDetail.setType(URI.create(BASE_URI + "transicao-status-invalida"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        if (ex.getStatusAtual() != null) {
+            problemDetail.setProperty("statusAtual", ex.getStatusAtual().name());
+        }
+        if (ex.getStatusDestino() != null) {
+            problemDetail.setProperty("statusDestino", ex.getStatusDestino().name());
+        }
+        return problemDetail;
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
