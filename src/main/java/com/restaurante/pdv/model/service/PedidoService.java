@@ -18,7 +18,12 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.restaurante.pdv.event.PedidoCriadoEvent;
+import com.restaurante.pdv.event.PedidoStatusAlteradoEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import com.restaurante.pdv.validation.CpfValidoValidator;
 
 /**
@@ -28,26 +33,38 @@ import com.restaurante.pdv.validation.CpfValidoValidator;
 @Transactional(readOnly = true)
 public class PedidoService {
 
+    private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
+
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
     private final OpcaoAdicionalRepository opcaoAdicionalRepository;
     private final SenhaSequencialService senhaSequencialService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
                          OpcaoAdicionalRepository opcaoAdicionalRepository) {
-        this(pedidoRepository, produtoRepository, opcaoAdicionalRepository, new SenhaSequencialService(pedidoRepository));
+        this(pedidoRepository, produtoRepository, opcaoAdicionalRepository, new SenhaSequencialService(pedidoRepository), null);
+    }
+
+    public PedidoService(PedidoRepository pedidoRepository,
+                         ProdutoRepository produtoRepository,
+                         OpcaoAdicionalRepository opcaoAdicionalRepository,
+                         SenhaSequencialService senhaSequencialService) {
+        this(pedidoRepository, produtoRepository, opcaoAdicionalRepository, senhaSequencialService, null);
     }
 
     @Autowired
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
                          OpcaoAdicionalRepository opcaoAdicionalRepository,
-                         SenhaSequencialService senhaSequencialService) {
+                         SenhaSequencialService senhaSequencialService,
+                         ApplicationEventPublisher eventPublisher) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.opcaoAdicionalRepository = opcaoAdicionalRepository;
         this.senhaSequencialService = senhaSequencialService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -113,6 +130,10 @@ public class PedidoService {
         pedido.recalcularTotal();
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        // Notificar observadores (Padrão Observer) via Spring ApplicationEventPublisher
+        publicarEventoPedidoCriado(pedidoSalvo);
+
         return PedidoResponseDTO.deEntidade(pedidoSalvo);
     }
 
@@ -172,9 +193,49 @@ public class PedidoService {
             }
         }
 
+        StatusPedido statusAnterior = pedido.getStatus();
         pedido.setStatus(novoStatus);
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        // Notificar observadores sobre a alteração de status
+        publicarEventoStatusAlterado(pedidoSalvo, statusAnterior, novoStatus);
+
         return PedidoResponseDTO.deEntidade(pedidoSalvo);
+    }
+
+    private void publicarEventoPedidoCriado(Pedido pedido) {
+        if (eventPublisher != null) {
+            try {
+                eventPublisher.publishEvent(new PedidoCriadoEvent(
+                        pedido.getId(),
+                        pedido.getNumeroSenha(),
+                        pedido.getDataHora(),
+                        pedido.getValorTotal(),
+                        pedido.getNomeCliente(),
+                        pedido.getCpfCliente()
+                ));
+            } catch (Exception e) {
+                log.error("Falha ao publicar PedidoCriadoEvent para o pedido #{}: {}",
+                        pedido.getId(), e.getMessage(), e);
+            }
+        }
+    }
+
+    private void publicarEventoStatusAlterado(Pedido pedido, StatusPedido statusAnterior, StatusPedido novoStatus) {
+        if (eventPublisher != null) {
+            try {
+                eventPublisher.publishEvent(new PedidoStatusAlteradoEvent(
+                        pedido.getId(),
+                        pedido.getNumeroSenha(),
+                        statusAnterior,
+                        novoStatus,
+                        LocalDateTime.now()
+                ));
+            } catch (Exception e) {
+                log.error("Falha ao publicar PedidoStatusAlteradoEvent para o pedido #{}: {}",
+                        pedido.getId(), e.getMessage(), e);
+            }
+        }
     }
 
     /**
