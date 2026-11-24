@@ -44,6 +44,9 @@ public class Produto implements Serializable {
     @Column(name = "quantidade_estoque", nullable = false)
     private Integer quantidadeEstoque;
 
+    @Version
+    private Long version;
+
     @Column(name = "imagem_url", length = 255)
     private String imagemUrl;
 
@@ -124,6 +127,18 @@ public class Produto implements Serializable {
 
     public void setQuantidadeEstoque(Integer quantidadeEstoque) {
         this.quantidadeEstoque = quantidadeEstoque;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public boolean isEstoqueBaixo() {
+        return quantidadeEstoque != null && quantidadeEstoque >= 0 && quantidadeEstoque < 5;
     }
 
     public String getImagemUrl() {

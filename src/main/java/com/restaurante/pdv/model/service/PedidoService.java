@@ -106,12 +106,24 @@ public class PedidoService {
         Integer numeroSenha = senhaSequencialService.gerarProximaSenha();
         pedido.setNumeroSenha(numeroSenha);
 
+        Map<Long, Integer> quantidadesPorProduto = new HashMap<>();
+
         for (CustomizacaoItemDTO itemDto : dto.getItens()) {
             ItemPedido item = montarItemPedido(itemDto);
+            pedido.adicionarItem(item);
 
-            // Validar integridade e debitar estoque do produto
             Produto produto = item.getProduto();
+            Long produtoId = produto.getId();
             int quantidadeSolicitada = item.getQuantidade();
+            quantidadesPorProduto.merge(produtoId, quantidadeSolicitada, Integer::sum);
+        }
+
+        // Valida o estoque agregado e efetua toda a baixa antes de persistir o pedido.
+        for (Map.Entry<Long, Integer> entrada : quantidadesPorProduto.entrySet()) {
+            Produto produto = produtoRepository.findById(entrada.getKey())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", entrada.getKey()));
+
+            int quantidadeSolicitada = entrada.getValue();
             Integer estoqueAtual = produto.getQuantidadeEstoque();
 
             if (estoqueAtual == null || estoqueAtual < quantidadeSolicitada) {
@@ -125,8 +137,6 @@ public class PedidoService {
 
             produto.setQuantidadeEstoque(estoqueAtual - quantidadeSolicitada);
             produtoRepository.save(produto);
-
-            pedido.adicionarItem(item);
         }
 
         pedido.recalcularTotal();
@@ -361,6 +371,14 @@ public class PedidoService {
 
         if (Boolean.FALSE.equals(produto.getAtivo())) {
             throw new NegocioException(String.format("O produto '%s' está inativo e não pode ser adicionado ao pedido.", produto.getNome()));
+        }
+
+        Integer estoqueAtual = produto.getQuantidadeEstoque();
+        if (estoqueAtual == null || estoqueAtual < quantidade) {
+            throw new NegocioException(String.format(
+                    "Estoque insuficiente para o produto '%s'. Disponível: %d, Solicitado: %d.",
+                    produto.getNome(), estoqueAtual != null ? estoqueAtual : 0, quantidade
+            ));
         }
 
         Set<OpcaoAdicional> opcoesDisponiveis = produto.getOpcoesDisponiveis();

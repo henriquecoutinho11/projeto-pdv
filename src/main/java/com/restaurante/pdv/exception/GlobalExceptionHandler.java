@@ -1,5 +1,7 @@
 package com.restaurante.pdv.exception;
 
+import jakarta.persistence.OptimisticLockException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -107,6 +109,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
         problemDetail.setTitle("Erro Interno do Servidor");
         problemDetail.setType(URI.create(BASE_URI + "erro-interno"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        return problemDetail;
+    }
+
+    @ExceptionHandler({OptimisticLockException.class, OptimisticLockingFailureException.class})
+    public ProblemDetail handleConflitoEstoque(Exception ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "O estoque deste produto acabou ou foi alterado por outra compra neste instante. Atualize o carrinho e tente novamente."
+        );
+        problemDetail.setTitle("Conflito de Estoque");
+        problemDetail.setType(URI.create(BASE_URI + "conflito-estoque"));
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
     }
