@@ -134,5 +134,23 @@ class TotemControllerIntegrationTest {
                 .andExpect(jsonPath("$.precoUnitario", is(43.00)))
                 .andExpect(jsonPath("$.subtotal", is(43.00)));
     }
+
+    @Test
+    @DisplayName("GET /api/totem/cardapio - Deve retornar catálogo completo com categorias e produtos")
+    void deveRetornarCardapioCompleto() throws Exception {
+        mockMvc.perform(get("/api/totem/cardapio"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categorias", notNullValue()))
+                .andExpect(jsonPath("$.produtos", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("GET /api/totem/produtos - Deve listar todos os produtos ativos do cardápio")
+    void deveListarProdutosDoTotem() throws Exception {
+        mockMvc.perform(get("/api/totem/produtos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", not(empty())))
+                .andExpect(jsonPath("$[*].nome", hasItem("Combo Especial Totem")));
+    }
 }
 

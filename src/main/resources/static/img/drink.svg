@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">
+  <defs>
+    <radialGradient id="drinkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#42A5F5" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#D32F2F" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="cupGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C62828" />
+      <stop offset="35%" stop-color="#E53935" />
+      <stop offset="70%" stop-color="#EF5350" />
+      <stop offset="100%" stop-color="#B71C1C" />
+    </linearGradient>
+    <linearGradient id="lidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#CFD8DC" />
+    </linearGradient>
+    <filter id="drinkShadow">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <circle cx="160" cy="160" r="140" fill="url(#drinkGlow)" />
+
+  <g filter="url(#drinkShadow)">
+    <!-- Canudo com Listras -->
+    <path d="M 175 40 L 195 20 L 225 35 L 205 60 L 180 110" fill="none" stroke="#FFC107" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 175 40 L 195 20 L 225 35 L 205 60 L 180 110" fill="none" stroke="#D32F2F" stroke-width="4" stroke-dasharray="8 8" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Copo Cônico Grande -->
+    <path d="M 95 105 L 115 265 Q 160 275 205 265 L 225 105 Z" fill="url(#cupGrad)" stroke="#FFA000" stroke-width="1.5" />
+
+    <!-- Gotículas de Condensação Gelada -->
+    <circle cx="130" cy="150" r="3.5" fill="#FFFFFF" opacity="0.6" />
+    <circle cx="145" cy="190" r="2.5" fill="#FFFFFF" opacity="0.6" />
+    <circle cx="185" cy="160" r="4" fill="#FFFFFF" opacity="0.6" />
+    <circle cx="170" cy="220" r="3" fill="#FFFFFF" opacity="0.6" />
+
+    <!-- Logo / Estampa no Copo -->
+    <circle cx="160" cy="180" r="32" fill="#FFFFFF" />
+    <circle cx="160" cy="180" r="28" fill="#FFC107" />
+    <text x="160" y="188" font-family="'Poppins', sans-serif" font-weight="900" font-size="22" fill="#D32F2F" text-anchor="middle">A</text>
+
+    <!-- Tampa do Copo -->
+    <ellipse cx="160" cy="105" rx="72" ry="16" fill="url(#lidGrad)" stroke="#90A4AE" stroke-width="1.5" />
+    <ellipse cx="160" cy="98" rx="42" ry="9" fill="#ECEFF1" stroke="#B0BEC5" stroke-width="1" />
+  </g>
+</svg>

@@ -129,4 +129,18 @@ class TotemViewControllerIntegrationTest {
                 .andExpect(jsonPath("$.ativo").value(true))
                 .andExpect(jsonPath("$.tipoConsumo").value("PARA_VIAGEM"));
     }
+
+    @Test
+    @DisplayName("GET /totem/cardapio deve renderizar a vitrine do cardápio com categorias e produtos")
+    void deveRenderizarCardapioDireto() throws Exception {
+        mockMvc.perform(get("/totem/cardapio"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("totem/index"))
+                .andExpect(model().attributeExists("categorias"))
+                .andExpect(model().attributeExists("produtos"))
+                .andExpect(model().attribute("abrirCardapioDireto", true))
+                .andExpect(content().string(containsString("Hambúrgueres Artesanais")))
+                .andExpect(content().string(containsString("screen-menu")))
+                .andExpect(content().string(containsString("modal-customizacao")));
+    }
 }

@@ -1,7 +1,11 @@
 package com.restaurante.pdv.controller;
 
+import com.restaurante.pdv.dto.CategoriaDTO;
+import com.restaurante.pdv.dto.ProdutoResponseDTO;
 import com.restaurante.pdv.dto.request.ModalidadeConsumoDTO;
 import com.restaurante.pdv.model.entity.TipoConsumo;
+import com.restaurante.pdv.model.service.CategoriaService;
+import com.restaurante.pdv.model.service.ProdutoService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,17 +17,27 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Controller MVC para o Totem de Autoatendimento do Antunes Lanches.
  * Gerencia a renderização dos templates Thymeleaf da jornada do cliente,
- * além do controle de sessão da modalidade de consumo (Comer Aqui / Para Viagem).
+ * além do controle de sessão da modalidade de consumo (Comer Aqui / Para Viagem)
+ * e o carregamento da vitrine de produtos e categorias do cardápio digital.
  */
 @Controller
 public class TotemViewController {
 
     public static final String SESSION_TIPO_CONSUMO = "TIPO_CONSUMO";
+
+    private final CategoriaService categoriaService;
+    private final ProdutoService produtoService;
+
+    public TotemViewController(CategoriaService categoriaService, ProdutoService produtoService) {
+        this.categoriaService = categoriaService;
+        this.produtoService = produtoService;
+    }
 
     /**
      * Redireciona a raiz da aplicação para o Totem de Autoatendimento.
@@ -34,13 +48,32 @@ public class TotemViewController {
     }
 
     /**
-     * Renderiza a página principal do Totem (Welcome & Seleção de Modalidade).
+     * Renderiza a página principal do Totem (Welcome, Seleção de Modalidade e Vitrine do Cardápio).
      */
     @GetMapping("/totem")
     public String totem(Model model, HttpSession session) {
-        TipoConsumo tipoConsumo = (TipoConsumo) session.getAttribute(SESSION_TIPO_CONSUMO);
-        model.addAttribute("tipoConsumo", tipoConsumo);
+        carregarDadosCardapio(model, session);
         return "totem/index";
+    }
+
+    /**
+     * Acesso direto à vitrine do Cardápio do Totem.
+     */
+    @GetMapping("/totem/cardapio")
+    public String cardapio(Model model, HttpSession session) {
+        carregarDadosCardapio(model, session);
+        model.addAttribute("abrirCardapioDireto", true);
+        return "totem/index";
+    }
+
+    private void carregarDadosCardapio(Model model, HttpSession session) {
+        TipoConsumo tipoConsumo = (TipoConsumo) session.getAttribute(SESSION_TIPO_CONSUMO);
+        List<CategoriaDTO> categorias = categoriaService.buscarAtivas();
+        List<ProdutoResponseDTO> produtos = produtoService.buscarAtivos();
+
+        model.addAttribute("tipoConsumo", tipoConsumo);
+        model.addAttribute("categorias", categorias);
+        model.addAttribute("produtos", produtos);
     }
 
     /**
