@@ -30,6 +30,8 @@ import java.util.Map;
 public class TotemViewController {
 
     public static final String SESSION_TIPO_CONSUMO = "TIPO_CONSUMO";
+    public static final String SESSION_NOME_CLIENTE = "NOME_CLIENTE";
+    public static final String SESSION_CPF_CLIENTE = "CPF_CLIENTE";
 
     private final CategoriaService categoriaService;
     private final ProdutoService produtoService;
@@ -95,12 +97,36 @@ public class TotemViewController {
     }
 
     /**
+     * Registra os dados de identificação do cliente (Nome e CPF) na sessão.
+     */
+    @PostMapping("/totem/identificacao")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> registrarIdentificacao(
+            @RequestBody Map<String, String> payload,
+            HttpSession session) {
+        String nome = payload != null ? payload.get("nomeCliente") : null;
+        String cpf = payload != null ? payload.get("cpfCliente") : null;
+
+        session.setAttribute(SESSION_NOME_CLIENTE, nome);
+        session.setAttribute(SESSION_CPF_CLIENTE, cpf);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("sucesso", true);
+        response.put("nomeCliente", nome);
+        response.put("cpfCliente", cpf);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Reseta e limpa o estado de atendimento da sessão do cliente.
      */
     @PostMapping("/totem/reset")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> resetarSessao(HttpSession session) {
         session.removeAttribute(SESSION_TIPO_CONSUMO);
+        session.removeAttribute(SESSION_NOME_CLIENTE);
+        session.removeAttribute(SESSION_CPF_CLIENTE);
 
         Map<String, Object> response = new HashMap<>();
         response.put("sucesso", true);
@@ -116,9 +142,13 @@ public class TotemViewController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> consultarSessao(HttpSession session) {
         TipoConsumo tipoConsumo = (TipoConsumo) session.getAttribute(SESSION_TIPO_CONSUMO);
+        String nomeCliente = (String) session.getAttribute(SESSION_NOME_CLIENTE);
+        String cpfCliente = (String) session.getAttribute(SESSION_CPF_CLIENTE);
 
         Map<String, Object> response = new HashMap<>();
         response.put("tipoConsumo", tipoConsumo);
+        response.put("nomeCliente", nomeCliente);
+        response.put("cpfCliente", cpfCliente);
         response.put("ativo", tipoConsumo != null);
 
         return ResponseEntity.ok(response);

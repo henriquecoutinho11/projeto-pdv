@@ -1711,3 +1711,1008 @@
         flex: 1;
     }
 }
+
+/* ==========================================================================
+   CARD-13: CARRINHO FLUTUANTE, DRAWER EXPANSÍVEL & IDENTIFICAÇÃO TOUCH
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   14. BARRA INFERIOR PERSISTENTE DO CARRINHO (Floating Cart Bar)
+   -------------------------------------------------------------------------- */
+.floating-cart-bar {
+    position: fixed;
+    bottom: 76px;
+    left: 0;
+    right: 0;
+    z-index: 800;
+    display: flex;
+    justify-content: center;
+    padding: 0 var(--spacing-md);
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.floating-cart-bar.hidden {
+    transform: translateY(120px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cart-bar-content {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 1080px;
+    background: rgba(28, 28, 28, 0.96);
+    backdrop-filter: blur(14px);
+    border: 2px solid var(--color-gold);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 193, 7, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.75rem;
+    gap: var(--spacing-md);
+}
+
+.cart-bar-info-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: transform var(--transition-fast);
+}
+
+.cart-bar-info-btn:active {
+    transform: scale(0.97);
+}
+
+.cart-badge-icon-box {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(211, 47, 47, 0.15));
+    border: 1.5px solid var(--color-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-badge-icon-box .cart-icon {
+    font-size: 1.6rem;
+}
+
+.cart-counter-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-gold);
+    color: #121212;
+    font-size: 0.8rem;
+    font-weight: 800;
+    border-radius: var(--radius-full);
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    border: 2px solid #1c1c1c;
+}
+
+.cart-bar-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-bar-label {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-gold);
+    line-height: 1.2;
+}
+
+.cart-bar-summary {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.cart-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.cart-bar-total-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.cart-total-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+}
+
+.cart-total-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-gold);
+}
+
+.cart-total-value .currency {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.btn-cart-checkout {
+    min-height: 52px;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+/* --------------------------------------------------------------------------
+   15. DRAWER EXPANSÍVEL DO CARRINHO (Cart Drawer Modal)
+   -------------------------------------------------------------------------- */
+.cart-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 1500;
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+}
+
+.cart-drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.cart-drawer-container {
+    width: 600px;
+    max-width: 100%;
+    height: 100%;
+    background-color: #181818;
+    border-left: 2px solid var(--color-gold);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.85);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cart-drawer-overlay.active .cart-drawer-container {
+    transform: translateX(0);
+}
+
+.cart-drawer-header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background-color: #202020;
+    border-bottom: 2px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.drawer-header-title-box {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.drawer-header-icon {
+    font-size: 2rem;
+}
+
+.cart-drawer-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cart-drawer-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.drawer-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.btn-clear-cart {
+    background: transparent;
+    border: 1px solid rgba(211, 47, 47, 0.5);
+    color: #ff8a80;
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-clear-cart:hover {
+    background-color: rgba(211, 47, 47, 0.2);
+    border-color: var(--color-primary);
+}
+
+.cart-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estado Vazio do Carrinho */
+.cart-empty-state {
+    margin: auto;
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.cart-empty-state.hidden {
+    display: none !important;
+}
+
+.empty-cart-icon {
+    font-size: 4.5rem;
+    line-height: 1;
+}
+
+.empty-cart-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-gold);
+    margin: 0;
+}
+
+.empty-cart-desc {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    max-width: 380px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Listagem de Itens no Drawer */
+.cart-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.cart-items-list.hidden {
+    display: none !important;
+}
+
+.cart-item-card {
+    background-color: #222222;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-md);
+    position: relative;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.cart-item-card:hover {
+    border-color: rgba(255, 193, 7, 0.4);
+    background-color: #262626;
+}
+
+.cart-item-media {
+    width: 76px;
+    height: 76px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+}
+
+.cart-item-art {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cart-item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cart-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.cart-item-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.cart-item-unit-price {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.cart-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
+}
+
+.cart-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+    line-height: 1.3;
+}
+
+.tag-combo {
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid var(--color-gold);
+    color: var(--color-gold);
+}
+
+.tag-adicional {
+    background: rgba(46, 125, 50, 0.18);
+    border: 1px solid var(--color-success);
+    color: #81c784;
+}
+
+.tag-remocao {
+    background: rgba(211, 47, 47, 0.15);
+    border: 1px solid var(--color-primary);
+    color: #ef9a9a;
+}
+
+.tag-obs {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.cart-item-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: var(--spacing-xs);
+}
+
+.cart-stepper {
+    display: inline-flex;
+    align-items: center;
+    background: #181818;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.btn-cart-stepper {
+    width: 34px;
+    height: 34px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-cart-stepper:active {
+    background-color: var(--color-gold);
+    color: #121212;
+}
+
+.cart-stepper-val {
+    min-width: 28px;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.cart-item-subtotal-box {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-gold);
+}
+
+.btn-remove-item {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-remove-item:hover {
+    color: #ff5252;
+    background: rgba(211, 47, 47, 0.15);
+}
+
+/* Rodapé do Drawer */
+.cart-drawer-footer {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background-color: #202020;
+    border-top: 2px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.cart-drawer-footer.hidden {
+    display: none !important;
+}
+
+.cart-financial-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+}
+
+.summary-line.summary-discount .text-green {
+    color: #81c784;
+    font-weight: 600;
+}
+
+.summary-line.summary-total {
+    margin-top: var(--spacing-xs);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.total-price-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--color-gold);
+}
+
+.total-price-display .currency {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.cart-drawer-cta-row {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.cart-drawer-cta-row .btn {
+    flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   16. TELA DE IDENTIFICAÇÃO DO CLIENTE & TECLADOS TOUCH (Passo 3 de 4)
+   -------------------------------------------------------------------------- */
+.identification-screen {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    animation: fadeIn var(--transition-normal);
+}
+
+.identification-screen.hidden {
+    display: none !important;
+}
+
+.identification-header {
+    text-align: center;
+}
+
+/* Barra compacta de resumo */
+.order-quick-summary-bar {
+    background: #1C1C1C;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.summary-pill {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+}
+
+.summary-pill strong {
+    color: #fff;
+}
+
+.summary-pill strong.text-gold {
+    color: var(--color-gold);
+    font-size: 1.15rem;
+}
+
+/* Grid Principal da Identificação */
+.identification-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: var(--spacing-xl);
+    align-items: start;
+}
+
+.touch-inputs-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.touch-field-card {
+    background-color: #1E1E1E;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.touch-field-card:hover {
+    border-color: rgba(255, 193, 7, 0.4);
+}
+
+.touch-field-card.active {
+    border-color: var(--color-gold);
+    background-color: #242424;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.25);
+}
+
+.field-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.field-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+}
+
+.field-badge {
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
+
+.touch-display-input {
+    min-height: 62px;
+    background: #121212;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #fff;
+    position: relative;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.touch-field-card.active .touch-display-input {
+    border-color: var(--color-gold);
+}
+
+.touch-display-input .display-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.touch-display-input .display-text.placeholder {
+    color: #666;
+    font-weight: 400;
+}
+
+/* Cursor Piscante */
+.display-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 1.5rem;
+    background-color: var(--color-gold);
+    margin-left: 4px;
+    animation: blinkCursor 0.9s infinite;
+}
+
+.display-cursor.hidden {
+    display: none !important;
+}
+
+@keyframes blinkCursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.btn-clear-field {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #fff;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-clear-field:hover {
+    background-color: rgba(211, 47, 47, 0.5);
+}
+
+.btn-clear-field.hidden {
+    display: none !important;
+}
+
+.field-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+.cpf-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-xs);
+}
+
+.btn-skip-cpf {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1.5px solid var(--color-gold);
+    color: var(--color-gold);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-skip-cpf:hover {
+    background: var(--color-gold);
+    color: #121212;
+}
+
+.btn-skip-cpf:active {
+    transform: scale(0.96);
+}
+
+.cpf-validation-feedback {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.cpf-validation-feedback.valid {
+    color: #81c784;
+}
+
+.cpf-validation-feedback.invalid {
+    color: #ff8a80;
+}
+
+/* Botões de Ação da Tela de Identificação */
+.identification-actions-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+}
+
+.identification-actions-row .btn {
+    flex: 1;
+}
+
+.btn-advance-payment {
+    min-height: 56px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+/* Coluna de Teclados Virtuais */
+.touch-keyboards-column {
+    background-color: #1E1E1E;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.keyboard-switcher-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--spacing-sm);
+}
+
+.keyboard-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.keyboard-tabs {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.keyboard-tab-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.keyboard-tab-btn.active {
+    background-color: var(--color-gold);
+    color: #121212;
+    border-color: var(--color-gold);
+    font-weight: 700;
+}
+
+/* 1. Teclado Virtual QWERTY Touch */
+.virtual-keyboard-qwerty {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.virtual-keyboard.hidden {
+    display: none !important;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.key-btn {
+    min-width: 44px;
+    height: 54px;
+    flex: 1;
+    max-width: 58px;
+    background-color: #2A2A2A;
+    border: 1.5px solid #444;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: transform var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.key-btn:hover {
+    background-color: #383838;
+    border-color: #666;
+}
+
+.key-btn:active {
+    transform: scale(0.92) !important;
+    background-color: var(--color-gold) !important;
+    color: #121212 !important;
+    border-color: var(--color-gold) !important;
+}
+
+.key-btn.key-action {
+    font-size: 0.85rem;
+    max-width: 95px;
+    background-color: #333333;
+}
+
+.key-btn.key-space {
+    flex: 3;
+    max-width: 240px;
+    font-size: 0.95rem;
+}
+
+.key-btn.key-backspace {
+    background-color: rgba(211, 47, 47, 0.2);
+    border-color: rgba(211, 47, 47, 0.5);
+    color: #ff8a80;
+    max-width: 110px;
+}
+
+.key-btn.key-next {
+    background-color: rgba(255, 193, 7, 0.18);
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+    max-width: 160px;
+}
+
+/* 2. Teclado Virtual Numérico Grande */
+.virtual-keyboard-numpad {
+    padding: var(--spacing-md) 0;
+}
+
+.numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    max-width: 360px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.num-key-btn {
+    height: 68px;
+    background-color: #282828;
+    border: 2px solid #444;
+    border-radius: var(--radius-md);
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: all var(--transition-fast);
+}
+
+.num-key-btn:hover {
+    background-color: #333333;
+    border-color: #666;
+}
+
+.num-key-btn:active {
+    transform: scale(0.92) !important;
+    background-color: var(--color-gold) !important;
+    color: #121212 !important;
+    border-color: var(--color-gold) !important;
+}
+
+.num-key-btn.num-key-action {
+    font-size: 1rem;
+    font-weight: 700;
+    background-color: #202020;
+}
+
+.num-key-btn.num-key-backspace {
+    background-color: rgba(211, 47, 47, 0.2);
+    border-color: rgba(211, 47, 47, 0.5);
+    color: #ff8a80;
+}
+
+/* Ajustes Responsivos para Carrinho e Identificação */
+@media (max-width: 900px) {
+    .floating-cart-bar {
+        bottom: 64px;
+        padding: 0 var(--spacing-sm);
+    }
+
+    .cart-bar-content {
+        padding: 0.6rem 1rem;
+    }
+
+    .cart-drawer-container {
+        width: 100%;
+    }
+
+    .identification-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .key-btn {
+        min-width: 30px;
+        height: 48px;
+        font-size: 1.1rem;
+    }
+
+    .key-btn.key-action {
+        font-size: 0.75rem;
+    }
+}
+

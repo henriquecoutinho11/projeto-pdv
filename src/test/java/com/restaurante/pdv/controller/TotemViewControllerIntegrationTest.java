@@ -143,4 +143,55 @@ class TotemViewControllerIntegrationTest {
                 .andExpect(content().string(containsString("screen-menu")))
                 .andExpect(content().string(containsString("modal-customizacao")));
     }
+
+    @Test
+    @DisplayName("POST /totem/identificacao deve registrar nomeCliente e cpfCliente na sessão com status 200 OK")
+    void deveRegistrarIdentificacaoDoClienteNaSessao() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        java.util.Map<String, String> payload = new java.util.HashMap<>();
+        payload.put("nomeCliente", "Carlos Antunes");
+        payload.put("cpfCliente", "529.982.247-25");
+
+        mockMvc.perform(post("/totem/identificacao")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sucesso").value(true))
+                .andExpect(jsonPath("$.nomeCliente").value("Carlos Antunes"))
+                .andExpect(jsonPath("$.cpfCliente").value("529.982.247-25"));
+
+        assertEquals("Carlos Antunes", session.getAttribute(TotemViewController.SESSION_NOME_CLIENTE));
+        assertEquals("529.982.247-25", session.getAttribute(TotemViewController.SESSION_CPF_CLIENTE));
+    }
+
+    @Test
+    @DisplayName("POST /totem/reset deve limpar também nomeCliente e cpfCliente da sessão")
+    void deveResetarSessaoELimparIdentificacao() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(TotemViewController.SESSION_TIPO_CONSUMO, TipoConsumo.COMER_AQUI);
+        session.setAttribute(TotemViewController.SESSION_NOME_CLIENTE, "Carlos Antunes");
+        session.setAttribute(TotemViewController.SESSION_CPF_CLIENTE, "529.982.247-25");
+
+        mockMvc.perform(post("/totem/reset").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sucesso").value(true));
+
+        assertNull(session.getAttribute(TotemViewController.SESSION_TIPO_CONSUMO));
+        assertNull(session.getAttribute(TotemViewController.SESSION_NOME_CLIENTE));
+        assertNull(session.getAttribute(TotemViewController.SESSION_CPF_CLIENTE));
+    }
+
+    @Test
+    @DisplayName("GET /totem deve renderizar elementos do carrinho flutuante, drawer e tela de identificação touch")
+    void deveRenderizarElementosDoCarrinhoEIdentificacaoNaView() throws Exception {
+        mockMvc.perform(get("/totem"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("screen-identification")))
+                .andExpect(content().string(containsString("floating-cart-bar")))
+                .andExpect(content().string(containsString("cart-drawer-modal")))
+                .andExpect(content().string(containsString("keyboard-qwerty")))
+                .andExpect(content().string(containsString("keyboard-numpad")))
+                .andExpect(content().string(containsString("btn-skip-cpf")));
+    }
 }
