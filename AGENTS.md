@@ -270,19 +270,13 @@ Ao desenvolver novas funcionalidades ou atender prompts do usuário, consulte os
 - **CARD-09 (`P2`):** Controle de Estoque com Concorrência Otimista (`@Version`).
 - **CARD-10 (`P2`):** API de Relatórios Gerenciais e Fechamento de Vendas.
 
-### 7.2 Módulo Front-End & UI
-- **CARD-11 (`P0`):** Design System & Layout Responsivo Base (Antunes Lanches).
-- **CARD-12 (`P1`):** Tela de Boas-Vindas e Escolha de Consumo (Totem Touch).
-- **CARD-13 (`P0`):** Vitrine de Produtos & Navegação por Categorias do Cardápio.
-- **CARD-14 (`P1`):** Modal Interativo de Personalização ("Monte seu Lanche").
-- **CARD-15 (`P0`):** Carrinho de Compras Flutuante & Drawer de Resumo.
-- **CARD-16 (`P1`):** Tela de Identificação com Teclado Virtual Touch.
-- **CARD-17 (`P0`):** Tela de Pagamento Interativo (PIX / Cartão).
-- **CARD-18 (`P1`):** Tela de Confirmação do Pedido e Ficha de Senha Digital.
-- **CARD-19 (`P0`):** Painel KDS da Cozinha (Display Operacional em Tempo Real).
-- **CARD-20 (`P1`):** Painel de Chamada de Senhas para TV do Salão.
-- **CARD-21 (`P1`):** Painel Administrativo de Gestão de Cardápio e Estoque.
-- **CARD-22 (`P2`):** Dashboard Administrativo de Métricas e Faturamento.
+### 7.2 Módulo Front-End & UI (Consolidado em 6 Cards)
+- **CARD-11 (`P0`):** Design System, Layout Responsivo Base & Entrada do Totem (Boas-Vindas e Consumo).
+- **CARD-12 (`P0`):** Vitrine do Cardápio por Categorias & Modal de Personalização ("Monte seu Lanche").
+- **CARD-13 (`P0`):** Carrinho de Compras Flutuante & Identificação do Cliente com Teclado Touch.
+- **CARD-14 (`P0`):** Checkout de Pagamento (PIX & Cartão) e Confirmação com Senha Digital.
+- **CARD-15 (`P0`):** Painéis Operacionais em Tempo Real: Cozinha (KDS) & Painel de TV do Salão.
+- **CARD-16 (`P1`):** Painel Administrativo: Gestão de Cardápio, Controle de Estoque & Dashboard Analítico.
 
 ---
 

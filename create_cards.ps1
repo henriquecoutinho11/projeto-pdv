@@ -336,14 +336,14 @@ Fornecer dados consolidados e métricas financeiras/operacionais para a área ad
 
     # ==================== FRONT-END ====================
     @{
-        Title = "[FRONTEND] Design System & Layout Responsivo Base (Antunes Lanches)"
+        Title = "[FRONTEND] Design System, Layout Responsivo Base & Entrada do Totem (Boas-Vindas e Consumo)"
         Labels = @("frontend", "totem-cliente", "fast-food")
         Priority = "P0"
-        Size = "M"
+        Size = "L"
         Status = "Ready"
         Body = @"
 ## 🎯 Contexto e Propósito
-Desenvolver a identidade visual e o Design System responsivo da lanchonete **Antunes Lanches**, com foco na experiência de autoatendimento touch screen (totem vertical 1080x1920) e compatibilidade total com desktop e dispositivos móveis.
+Desenvolver a identidade visual completa, o Design System responsivo da lanchonete **Antunes Lanches** e a interface de acolhimento do totem de autoatendimento touch (1080x1920) e multi-dispositivo, integrando a tela de descanso/boas-vindas e a escolha da modalidade de consumo.
 
 ---
 
@@ -351,33 +351,12 @@ Desenvolver a identidade visual e o Design System responsivo da lanchonete **Ant
 - [ ] Criação da folha de estilos CSS modular (`base.css`, `components.css`, `totem.css`):
   - Paleta de cores temática de fast-food (vermelho vivo, amarelo ouro, preto fosco e branco).
   - Tipografia de alta legibilidade para leitura rápida à distância.
-  - Espaçamentos e botões grandes (alvo mínimo de toque de 48x48px para ergonomia touch).
-- [ ] Layout fluido utilizando CSS Grid e Flexbox com media queries para:
-  - Totem Vertical Kiosk (1080x1920)
-  - Desktop / Terminal de Caixa (1920x1080)
+  - Espaçamentos e botões grandes (alvo ergonômico mínimo de toque de 48x48px) com feedback visual (`:active`, `:focus`, `:hover`).
+- [ ] Layout fluido e adaptativo com CSS Grid e Flexbox com media queries para:
+  - Totem Vertical Kiosk (1080x1920).
+  - Desktop / Terminal de Caixa (1920x1080).
   - Tablets e Smartphones (responsividade móvel).
-- [ ] Componentização de cabeçalho com logo do Antunes Lanches, rodapé com botão de ajuda/cancelar e área central dinâmica via Thymeleaf.
-
----
-
-## ✅ Critérios de Aceite
-- [ ] O layout adapta-se perfeitamente aos diferentes formatos de tela sem quebra de elementos.
-- [ ] Todos os elementos interativos possuem feedback visual de toque/clique (`:active`, `:focus`).
-"@
-    },
-    @{
-        Title = "[FRONTEND] Tela de Boas-Vindas e Escolha de Consumo (Totem McDonald's)"
-        Labels = @("frontend", "totem-cliente", "fast-food")
-        Priority = "P1"
-        Size = "S"
-        Status = "Ready"
-        Body = @"
-## 🎯 Contexto e Propósito
-Criar a tela inicial de entrada do Totem do Antunes Lanches no padrão consagrado do McDonald's, capturando a atenção do cliente e iniciando a jornada de compra com a escolha do tipo de consumo.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
+- [ ] Componentização Thymeleaf com fragments: cabeçalho com logo do Antunes Lanches, rodapé com botão de ajuda/cancelar e área central dinâmica.
 - [ ] Tela de proteção/atração com banner promocional rotativo com fotos apetitosas de hambúrgueres e combos.
 - [ ] Botão de toque central ""Toque aqui para começar"".
 - [ ] Tela de modalidade de consumo com dois cards grandes e ilustrados:
@@ -388,25 +367,26 @@ Criar a tela inicial de entrada do Totem do Antunes Lanches no padrão consagrad
 ---
 
 ## ✅ Critérios de Aceite
-- [ ] Transições suaves e sem atraso perceptível ao toque.
+- [ ] O layout adapta-se perfeitamente aos diferentes formatos de tela sem quebra de elementos.
+- [ ] Todos os elementos interativos possuem feedback visual de toque/clique.
 - [ ] A escolha do tipo de consumo é salva na sessão do cliente para o pedido final.
 - [ ] O temporizador de reset restaura o totem de forma limpa.
 "@
     },
     @{
-        Title = "[FRONTEND] Vitrine de Produtos & Navegação por Categorias do Cardápio"
+        Title = "[FRONTEND] Vitrine do Cardápio por Categorias & Modal de Personalização (""Monte seu Lanche"")"
         Labels = @("frontend", "totem-cliente", "fast-food")
         Priority = "P0"
         Size = "L"
-        Status = "Backlog"
+        Status = "Ready"
         Body = @"
 ## 🎯 Contexto e Propósito
-Construir o catálogo interativo do cardápio do Antunes Lanches, permitindo que o cliente navegue facilmente por categorias e localize produtos de forma visual e intuitiva.
+Construir o catálogo interativo do cardápio do Antunes Lanches com navegação por categorias e o modal interativo de customização estilo McDonald's, permitindo ao cliente navegar, buscar, personalizar lanches com adicionais e remoções e montar combos com cálculo dinâmico de valor.
 
 ---
 
 ## 🛠️ Escopo Técnico e Implementação
-- [ ] Barra lateral de categorias com navegação rápida:
+- [ ] Barra lateral de categorias com navegação rápida e rolagem suave:
   - 🍔 **Hambúrgueres Artesanais**
   - 🍟 **Acompanhamentos & Batatas**
   - 🥤 **Bebidas & Sucos**
@@ -415,7 +395,12 @@ Construir o catálogo interativo do cardápio do Antunes Lanches, permitindo que
 - [ ] Grid de exibição de produtos com fotos em alta resolução, nome, breve descrição dos ingredientes e preço formatado (`R$ 00,00`).
 - [ ] Badges visuais destacados: ""Novo"", ""Mais Vendido"", ""Oferta do Dia"".
 - [ ] Campo de busca rápida e filtros rápidos.
-- [ ] Indicação visual clara de produto esgotado (desabilitando o botão de adicionar).
+- [ ] Indicação visual clara de produto esgotado (desabilitando o clique e botão de adicionar).
+- [ ] Modal em tela cheia (ou gaveta expansiva) de personalização exibindo foto do lanche selecionado e descrição completa:
+  - Seção **""Adicionais do Chefe""**: checkboxes ou seletores de quantidade (+ Queijo Cheddar, + Bacon Crocante, + Hambúrguer Extra, + Molho Especial Antunes).
+  - Seção **""Personalize seus Ingredientes""**: botões de alternância rápidos para remoção de itens padrão (""Sem cebola"", ""Sem picles"", ""Sem salada"", ""Sem molho"").
+  - Seção **""Transforme em Combo""**: seleção do tamanho da batata (Média / Grande) e escolha da bebida.
+- [ ] Barra de rodapé com cálculo dinâmico e animado do valor total e botão grande ""Adicionar ao Pedido"", compilando objeto JSON pronto para o carrinho.
 
 ---
 
@@ -423,268 +408,162 @@ Construir o catálogo interativo do cardápio do Antunes Lanches, permitindo que
 - [ ] A troca de categorias é instantânea e rola suavemente até os produtos.
 - [ ] A renderização dos produtos via Thymeleaf e JavaScript é veloz e fluida.
 - [ ] Itens sem estoque não permitem abertura de personalização ou inclusão no carrinho.
-"@
-    },
-    @{
-        Title = "[FRONTEND] Modal Interativo de Personalização de Lanches (""Monte seu Lanche"")"
-        Labels = @("frontend", "totem-cliente", "fast-food")
-        Priority = "P0"
-        Size = "L"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Desenvolver o modal interativo de customização estilo totem McDonald's, onde o cliente pode turbinar seu lanche, remover ingredientes indesejados e escolher opções de combo com atualização de preço em tempo real.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Modal em tela cheia (ou gaveta expansiva) exibindo a foto do lanche selecionado e descrição completa.
-- [ ] Seção **""Adicionais do Chefe""**:
-  - Checkboxes ou seletores de quantidade (+ Queijo Cheddar, + Bacon Crocante, + Hambúrguer Extra, + Molho Especial Antunes).
-- [ ] Seção **""Personalize seus Ingredientes""**:
-  - Botões de alternância rápidos para remoção de itens padrão (""Sem cebola"", ""Sem picles"", ""Sem salada"", ""Sem molho"").
-- [ ] Seção **""Transforme em Combo""**:
-  - Seleção do tamanho da batata (Média / Grande) e escolha da bebida.
-- [ ] Barra de rodapé com cálculo dinâmico e animado do valor total e botão grande ""Adicionar ao Pedido"".
-
----
-
-## ✅ Critérios de Aceite
 - [ ] Qualquer alteração de adicional recalcula instantaneamente o valor final na tela.
 - [ ] As opções marcadas são compiladas em um objeto JSON pronto para o carrinho.
 - [ ] Interface simples de fechar ou cancelar sem alterar o carrinho existente.
 "@
     },
     @{
-        Title = "[FRONTEND] Carrinho de Compras Flutuante & Drawer de Resumo do Pedido"
-        Labels = @("frontend", "totem-cliente")
-        Priority = "P1"
-        Size = "M"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Criar o componente de carrinho de compras acessível a qualquer momento pelo cliente, exibindo com transparência todos os itens selecionados e suas personalizações.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Barra inferior/lateral persistente exibindo: quantidade de itens e valor total acumulado.
-- [ ] Drawer expansível exibindo a listagem detalhada:
-  - Nome do produto e foto em miniatura.
-  - Subitens e tags de customização (ex: ""+ Bacon"", ""SEM CEBOLA"").
-  - Botões de controle de quantidade (+ / -) e botão de remoção (lixeira).
-  - Subtotal calculado para cada item.
-- [ ] Botão fixo com destaque visual: ""Finalizar Pedido"" (redirecionando para checkout).
-- [ ] Estado vazio amigável caso não haja itens no carrinho.
-
----
-
-## ✅ Critérios de Aceite
-- [ ] O carrinho atualiza imediatamente ao adicionar ou editar um produto.
-- [ ] Alterar quantidade atualiza o total imediatamente.
-- [ ] Ao remover todos os itens, o carrinho retorna ao estado inicial.
-"@
-    },
-    @{
-        Title = "[FRONTEND] Tela de Identificação do Cliente com Teclado Virtual Touch"
+        Title = "[FRONTEND] Carrinho de Compras Flutuante & Identificação do Cliente com Teclado Touch"
         Labels = @("frontend", "totem-cliente", "fast-food")
-        Priority = "P1"
-        Size = "S"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Disponibilizar uma tela rápida de identificação no totem de autoatendimento, permitindo inclusão de CPF e nome com interface touch ergonômica sem dependência de teclado físico.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Campo para digitação de **Nome para Chamada** (com teclado QWERTY virtual touch na tela).
-- [ ] Campo para digitação de **CPF na Nota** com teclado numérico grande (estilo discador telefônico/caixa eletrônico) e máscara automática (`000.000.000-00`).
-- [ ] Botão de atalho destacado: **""Não desejo informar CPF""** (para acelerar o atendimento).
-- [ ] Botão de avanço rápido para a etapa de pagamento.
-
----
-
-## ✅ Critérios de Aceite
-- [ ] O teclado virtual touch responde com agilidade e teclas grandes.
-- [ ] Máscara de CPF funciona corretamente ao digitar e apagar.
-- [ ] O cliente pode prosseguir sem preencher nenhum dos dois campos caso prefira não se identificar.
-"@
-    },
-    @{
-        Title = "[FRONTEND] Tela de Pagamento Interativo (QR Code PIX & Cartão)"
-        Labels = @("frontend", "totem-cliente")
         Priority = "P0"
         Size = "M"
         Status = "Backlog"
         Body = @"
 ## 🎯 Contexto e Propósito
-Prover a interface interativa de pagamento no totem do Antunes Lanches, orientando o cliente passo a passo conforme a modalidade escolhida.
+Desenvolver a experiência do carrinho de compras interativo com resumo de pedidos e a etapa de identificação do cliente com teclados virtuais touch dedicados para uso rápido em totens físicos.
 
 ---
 
 ## 🛠️ Escopo Técnico e Implementação
-- [ ] Seleção de modalidade com botões visuais ilustrados:
-  - 💠 **PIX** (Pagamento Instantâneo)
-  - 💳 **Cartão de Crédito ou Débito**
+- [ ] Barra inferior/lateral persistente exibindo: quantidade de itens e valor total acumulado.
+- [ ] Drawer expansível exibindo a listagem detalhada do pedido:
+  - Nome do produto e foto em miniatura.
+  - Subitens e tags de customização (ex: ""+ Bacon"", ""SEM CEBOLA"", ""Batata Grande"").
+  - Botões de controle de quantidade (+ / -) e botão de remoção (lixeira).
+  - Subtotal calculado para cada item.
+- [ ] Botão fixo com destaque visual: ""Finalizar Pedido"" (redirecionando para a identificação/checkout).
+- [ ] Estado vazio amigável caso não haja itens no carrinho.
+- [ ] Tela de identificação com interface touch ergonômica:
+  - Campo para digitação de **Nome para Chamada** (com teclado QWERTY virtual touch na tela).
+  - Campo para digitação de **CPF na Nota** com teclado numérico grande (estilo discador telefônico/caixa eletrônico) e máscara automática (`000.000.000-00`).
+  - Botão de atalho destacado: **""Não desejo informar CPF""** (para acelerar o atendimento).
+  - Botão de avanço rápido para a etapa de pagamento com ou sem identificação.
+
+---
+
+## ✅ Critérios de Aceite
+- [ ] O carrinho atualiza imediatamente ao adicionar, alterar quantidade ou excluir um produto.
+- [ ] Ao remover todos os itens, o carrinho retorna ao estado inicial.
+- [ ] O teclado virtual touch responde com agilidade e teclas grandes sem dependência de periféricos.
+- [ ] Máscara de CPF funciona corretamente ao digitar e apagar.
+- [ ] O cliente pode prosseguir sem preencher nenhum dos dois campos caso prefira não se identificar.
+"@
+    },
+    @{
+        Title = "[FRONTEND] Checkout de Pagamento (PIX & Cartão) e Confirmação com Senha Digital"
+        Labels = @("frontend", "totem-cliente", "fast-food")
+        Priority = "P0"
+        Size = "M"
+        Status = "Backlog"
+        Body = @"
+## 🎯 Contexto e Propósito
+Implementar a etapa de fechamento financeiro do pedido com suporte interativo a PIX e Cartão, e a tela final de confirmação de compra com emissão e destaque da senha sequencial diária.
+
+---
+
+## 🛠️ Escopo Técnico e Implementação
+- [ ] Seleção de modalidade de pagamento com botões visuais ilustrados:
+  - 💠 **PIX** (Pagamento Instantâneo).
+  - 💳 **Cartão de Crédito ou Débito**.
 - [ ] **Fluxo PIX:**
   - Renderização do QR Code em tamanho grande com alto contraste para leitura rápida por smartphone.
   - Temporizador regressivo de validade (5:00 min).
   - Feedback sonoro/visual assim que o pagamento for detectado.
 - [ ] **Fluxo Cartão:**
   - Animação demonstrativa de aproximação (contactless) ou inserção do cartão na maquininha lateral do totem.
-  - Mensagem de status (""Aguardando senha"", ""Processando..."").
+  - Mensagem dinâmica de status (""Aguardando senha"", ""Processando..."").
+- [ ] **Tela de Confirmação do Pedido:**
+  - Ícone animado de confirmação (check verde com efeito de confete/sucesso).
+  - Exibição em caixa alta e fonte gigante da **Senha de Atendimento** (ex: `#042`).
+  - Resumo simplificado do pedido com número de itens e modalidade (""Para Comer no Local"" ou ""Para Viagem"").
+  - Mensagem orientativa: *""Acompanhe sua senha no painel da lanchonete e retire no balcão quando estiver pronta!""*.
+  - Botão ""Imprimir Comprovante"" e botão ""Concluir"".
+  - Contagem regressiva de 15 segundos para redirecionamento automático à tela de início para o próximo cliente.
 
 ---
 
 ## ✅ Critérios de Aceite
 - [ ] O QR Code é exibido com clareza e permite leitura imediata pela câmera do celular.
 - [ ] A tela exibe indicador de carregamento durante a confirmação da transação.
-- [ ] Ao confirmar o pagamento, direciona automaticamente para a tela de confirmação e senha.
-"@
-    },
-    @{
-        Title = "[FRONTEND] Tela de Confirmação do Pedido e Ficha de Senha Digital"
-        Labels = @("frontend", "totem-cliente", "fast-food")
-        Priority = "P1"
-        Size = "S"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Criar a tela final de experiência do cliente no totem, fornecendo com destaque a senha de atendimento para retirada e as instruções do pedido.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Exibição em caixa alta e fonte gigante da **Senha de Atendimento** (ex: `#042`).
-- [ ] Ícone animado de confirmação (check verde com efeito de confete/sucesso).
-- [ ] Resumo simplificado do pedido com número de itens e modalidade (""Para Comer no Local"" ou ""Para Viagem"").
-- [ ] Mensagem orientativa: *""Acompanhe sua senha no painel da lanchonete e retire no balcão quando estiver pronta!""*.
-- [ ] Botão ""Imprimir Comprovante"" e botão ""Concluir"".
-- [ ] Contagem regressiva de 15 segundos para redirecionamento automático à tela de início para o próximo cliente.
-
----
-
-## ✅ Critérios de Aceite
 - [ ] A senha gerada corresponde exatamente ao número retornado pelo backend.
-- [ ] A tela limpa o carrinho e qualquer estado residual do pedido anterior.
+- [ ] A tela limpa o carrinho e qualquer estado residual do pedido anterior ao concluir ou no timeout.
 "@
     },
     @{
-        Title = "[FRONTEND] Painel KDS da Cozinha (Display Operacional em Tempo Real)"
-        Labels = @("frontend", "cozinha-kds")
+        Title = "[FRONTEND] Painéis Operacionais em Tempo Real: Cozinha (KDS) & Painel de TV do Salão"
+        Labels = @("frontend", "cozinha-kds", "fast-food")
         Priority = "P0"
         Size = "L"
         Status = "Backlog"
         Body = @"
 ## 🎯 Contexto e Propósito
-Desenvolver o painel de produção da cozinha (Kitchen Display System - KDS) em interface web responsiva para tablets/monitores dos chapeiros e operadores do **Antunes Lanches**.
+Desenvolver os dois painéis de exibição operacional em tempo real: o Kitchen Display System (KDS) para a linha de produção da cozinha e o painel público de chamada de senhas para as TVs do salão de atendimento.
 
 ---
 
 ## 🛠️ Escopo Técnico e Implementação
-- [ ] Layout em colunas ou grid com cartões de pedidos:
-  - Cabeçalho do card: Senha (`#042`), tipo (Local/Viagem) e temporizador de espera.
+- [ ] **Painel KDS da Cozinha (Monitores/Tablets dos Operadores):**
+  - Layout em colunas ou grid com cartões de pedidos: cabeçalho com Senha (`#042`), tipo (Local/Viagem) e temporizador dinâmico de espera.
   - Código de cores por tempo de espera:
     - 🟢 Verde: < 5 minutos.
     - 🟡 Amarelo: entre 5 e 10 minutos.
     - 🔴 Vermelho: > 10 minutos (alerta de atraso).
-  - Lista de itens e insumos:
-    - Tags de personalização com contraste elevado (ex: etiqueta vermelha **""SEM CEBOLA""**, etiqueta verde **""+ BACON""**).
-- [ ] Botão de 1 toque no card para avançar etapa:
-  `Recebido` ➔ `Iniciar Preparo` ➔ `Marcar como Pronto`.
-- [ ] Atualização automática da lista de pedidos (polling periódico ou WebSocket).
+  - Lista de itens e insumos com contraste elevado: etiqueta vermelha **""SEM CEBOLA""**, etiqueta verde **""+ BACON""**.
+  - Botão de 1 toque no card para avançar etapa: `Recebido` ➔ `Iniciar Preparo` ➔ `Marcar como Pronto`.
+  - Descarte visual automático de pedidos entregues.
+- [ ] **Painel de Chamada de Senhas para TV do Salão:**
+  - Layout de alto contraste com duas colunas visuais:
+    - ⏳ **EM PREPARO** (Lista de senhas em produção na cozinha).
+    - 🔔 **PRONTO PARA RETIRADA** (Lista de senhas prontas, com número e nome do cliente).
+  - Efeito audiovisual quando um pedido mudar para `PRONTO`: animação pulsante no card da nova senha e reprodução de som suave (""Ding-dong"").
+  - Modo tela cheia (Full Screen API) para Smart TVs, exibindo relógio digital e data no rodapé.
+- [ ] Mecanismo de sincronização automática sem recarregamento de página (polling periódico ou WebSocket).
 
 ---
 
 ## ✅ Critérios de Aceite
-- [ ] Permite que a equipe da cozinha avance o status do pedido com um único toque na tela.
-- [ ] Destaque inequívoco para remoções de ingredientes para evitar erros operacionais.
-- [ ] Pedidos concluídos saem da tela da cozinha automaticamente.
+- [ ] Equipe da cozinha avança o status do pedido com um único toque na tela.
+- [ ] Destaque inequívoco para remoções e adicionais de ingredientes para evitar erros operacionais.
+- [ ] Painel da TV é legível a longa distância em monitores de 32"" a 65"".
+- [ ] Atualização fluida em tempo real e alerta sonoro emitido ao marcar pedido como pronto.
 "@
     },
     @{
-        Title = "[FRONTEND] Painel de Chamada de Senhas para TV do Salão"
-        Labels = @("frontend", "cozinha-kds", "fast-food")
-        Priority = "P2"
-        Size = "M"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Desenvolver a interface pública estilo McDonald's para exibição em TVs do salão, comunicando aos clientes quais pedidos estão sendo preparados e quais estão prontos para retirada no balcão.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Layout de alto contraste com duas colunas visuais:
-  - ⏳ **EM PREPARO** (Lista de senhas em produção na cozinha).
-  - 🔔 **PRONTO PARA RETIRADA** (Lista de senhas prontas, com número e nome do cliente).
-- [ ] Efeito visual quando um pedido mudar para `PRONTO`:
-  - Animação pulsante no card da nova senha.
-  - Reprodução de efeito sonoro suave de notificação (""Ding-dong"").
-- [ ] Exibição no rodapé da data, hora atual e mensagens institucionais do Antunes Lanches.
-- [ ] Modo tela cheia (Full Screen API) para uso em Smart TVs e navegadores dedicados.
-
----
-
-## ✅ Critérios de Aceite
-- [ ] A interface é legível a longa distância em monitores de 32"" a 65"".
-- [ ] Atualização fluida sem necessidade de recarregar a página manualmente (F5).
-"@
-    },
-    @{
-        Title = "[FRONTEND] Painel Administrativo de Gestão do Cardápio e Estoque"
+        Title = "[FRONTEND] Painel Administrativo: Gestão de Cardápio, Controle de Estoque & Dashboard Analítico"
         Labels = @("frontend", "admin-gestao")
         Priority = "P1"
-        Size = "M"
+        Size = "L"
         Status = "Backlog"
         Body = @"
 ## 🎯 Contexto e Propósito
-Criar a área de retaguarda administrativa para o gerente do Antunes Lanches gerenciar o cardápio, produtos, fotos, preços e controlar a disponibilidade de estoque.
+Criar a área de retaguarda administrativa unificada para gerentes e proprietários do Antunes Lanches, contemplando a gestão do cardápio, controle de estoque em tempo real e dashboard analítico de vendas e faturamento.
 
 ---
 
 ## 🛠️ Escopo Técnico e Implementação
-- [ ] Tabela responsiva com listagem de produtos com filtros por categoria e status (Ativo/Inativo).
-- [ ] Modal de cadastro e edição de produtos:
-  - Nome, descrição, categoria, preço de venda, estoque atual e URL da foto.
-- [ ] Botão de ação rápida ""Pausar Venda"" (toggle instantâneo para desativar produto esgotado no totem).
-- [ ] Validações de formulário no front-end com mensagens amigáveis de erro.
+- [ ] **Gestão de Cardápio e Estoque:**
+  - Tabela responsiva com listagem de produtos com filtros por categoria e status (Ativo/Inativo).
+  - Modal de cadastro e edição de produtos: nome, descrição, categoria, preço de venda, estoque atual e URL da foto.
+  - Botão de ação rápida ""Pausar Venda"" (toggle instantâneo para desativar produto esgotado no totem).
+  - Validações de formulário no front-end com mensagens amigáveis de erro.
+- [ ] **Dashboard Administrativo de Métricas e Faturamento:**
+  - Cards de KPIs principais no topo:
+    - 💰 Faturamento Total do Dia (R$).
+    - 📦 Total de Pedidos Concluídos.
+    - ⏱️ Tempo Médio de Espera na Cozinha.
+    - 🍔 Ticket Médio por Pedido.
+  - Gráfico de pizza/rosca: Distribuição de pagamentos (PIX vs. Cartão de Crédito vs. Débito).
+  - Gráfico de barras: Top 5 hambúrgueres mais vendidos da casa.
+  - Seletor de período dinâmico (Hoje, Últimos 7 dias, Este Mês).
 
 ---
 
 ## ✅ Critérios de Aceite
-- [ ] Gerente consegue cadastrar um novo lanche e ele passa a ser exibido no totem.
-- [ ] Desativar um produto remove-o imediatamente da vitrine de vendas.
-"@
-    },
-    @{
-        Title = "[FRONTEND] Dashboard Administrativo de Métricas e Faturamento"
-        Labels = @("frontend", "admin-gestao")
-        Priority = "P2"
-        Size = "M"
-        Status = "Backlog"
-        Body = @"
-## 🎯 Contexto e Propósito
-Criar o dashboard analítico com métricas de desempenho comercial e operacional para os donos e gerentes da lanchonete Antunes Lanches.
-
----
-
-## 🛠️ Escopo Técnico e Implementação
-- [ ] Cards de KPIs principais no topo:
-  - 💰 Faturamento Total do Dia (R$).
-  - 📦 Total de Pedidos Concluídos.
-  - ⏱️ Tempo Médio de Espera na Cozinha.
-  - 🍔 Ticket Médio por Pedido.
-- [ ] Gráfico de pizza/rosca: Distribuição de pagamentos (PIX vs. Cartão de Crédito vs. Débito).
-- [ ] Gráfico de barras: Top 5 hambúrgueres mais vendidos da casa.
-- [ ] Seletor de período (Hoje, Últimos 7 dias, Este Mês).
-
----
-
-## ✅ Critérios de Aceite
-- [ ] Métricas batem com os dados retornados pela API analítica do backend.
-- [ ] Gráficos renderizam corretamente em computadores e tablets de gestão.
+- [ ] Gerente consegue cadastrar/editar produtos e alterações refletem imediatamente no totem.
+- [ ] Desativar um produto ou pausar venda remove-o instantaneamente da vitrine do totem.
+- [ ] Métricas e gráficos batem com os dados retornados pela API analítica do backend.
+- [ ] Gráficos renderizam perfeitamente em computadores e tablets de gestão.
 "@
     }
 )
