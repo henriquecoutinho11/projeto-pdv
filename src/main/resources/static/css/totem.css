@@ -1,0 +1,625 @@
+/* ==========================================================================
+   Design System Antunes Lanches - Estilos do Totem de Autoatendimento
+   Layout Fluid Kiosk (1080x1920), Desktop e Mobile + Telas de Entrada
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ESTRUTURA GERAL DO TOTEM (Layout em Camadas e Viewport Flex)
+   -------------------------------------------------------------------------- */
+.totem-viewport {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    background: radial-gradient(circle at 50% 20%, #1f1212 0%, #121212 70%);
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   2. CABEÇALHO DO TOTEM (Header Fragment)
+   -------------------------------------------------------------------------- */
+.totem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background-color: rgba(20, 20, 20, 0.95);
+    border-bottom: 2px solid rgba(211, 47, 47, 0.4);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+}
+
+.brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.brand-logo-img {
+    width: 56px;
+    height: 56px;
+    filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.4));
+    transition: transform var(--transition-normal);
+}
+
+.brand-title {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    color: var(--color-surface-white);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.brand-title span {
+    color: var(--color-gold);
+}
+
+.brand-tagline {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.totem-clock {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-surface);
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   3. ÁREA DE CONTEÚDO PRINCIPAL (Dynamic Content Area)
+   -------------------------------------------------------------------------- */
+.totem-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   4. TELA DE DESCANSO / BOAS-VINDAS (Idle & Welcome Screen)
+   -------------------------------------------------------------------------- */
+.welcome-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.welcome-hero {
+    margin-bottom: var(--spacing-md);
+    animation: fadeIn 0.8s ease-out;
+}
+
+.welcome-badge {
+    margin-bottom: var(--spacing-sm);
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+}
+
+.welcome-title {
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    font-weight: 900;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--color-surface-white);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.welcome-subtitle {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    color: var(--color-gold);
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
+}
+
+/* Carrossel de Ofertas / Banners Promocionais */
+.promo-carousel {
+    width: 100%;
+    max-width: 850px;
+    margin: var(--spacing-md) auto;
+    background: linear-gradient(145deg, #1f1f1f 0%, #151515 100%);
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel-slides {
+    position: relative;
+    height: 380px;
+    width: 100%;
+}
+
+.promo-slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xl);
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.96) translateX(40px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+}
+
+.promo-slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateX(0);
+}
+
+.promo-info {
+    flex: 1;
+    text-align: left;
+    padding-right: var(--spacing-lg);
+    z-index: 2;
+}
+
+.promo-tag {
+    display: inline-block;
+    background: var(--color-primary);
+    color: var(--color-surface-white);
+    padding: 0.35rem 0.9rem;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+}
+
+.promo-title {
+    font-size: clamp(1.5rem, 3.5vw, 2.3rem);
+    font-weight: 800;
+    color: var(--color-surface-white);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.15;
+}
+
+.promo-desc {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+    max-width: 420px;
+}
+
+.promo-price-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+}
+
+.promo-price-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+}
+
+.promo-price {
+    font-size: var(--font-size-3xl);
+    font-weight: 900;
+    color: var(--color-gold);
+    text-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+}
+
+.promo-visual {
+    flex: 0 0 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.promo-art {
+    width: 280px;
+    height: 280px;
+    object-fit: contain;
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.7));
+    transition: transform 0.4s ease;
+}
+
+.promo-slide.active .promo-art {
+    animation: bounceSlow 3.5s infinite ease-in-out;
+}
+
+/* Indicadores de Slide (Dots) */
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0 var(--spacing-md);
+}
+
+.carousel-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: var(--radius-full);
+    background-color: rgba(255, 255, 255, 0.25);
+    border: none;
+    cursor: pointer;
+    transition: width var(--transition-fast), background-color var(--transition-fast);
+}
+
+.carousel-dot.active {
+    width: 38px;
+    background-color: var(--color-gold);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+}
+
+/* Ação Central de Acolhimento */
+.welcome-action-box {
+    margin-top: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.touch-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
+}
+
+.touch-hand-icon {
+    font-size: 1.6rem;
+    animation: bounceSlow 1.5s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   5. TELA DE ESCOLHA DE CONSUMO (Dining Option Screen)
+   -------------------------------------------------------------------------- */
+.dining-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: slideInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dining-header {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.dining-title {
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    font-weight: 900;
+    color: var(--color-surface-white);
+    text-transform: uppercase;
+    line-height: 1.15;
+    margin-bottom: var(--spacing-xs);
+}
+
+.dining-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.dining-cards-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2xl);
+    width: 100%;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.dining-card {
+    background: linear-gradient(160deg, #222222 0%, #181818 100%);
+    border: 3px solid #333333;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    min-height: 380px;
+    justify-content: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dining-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--color-gold);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 193, 7, 0.3);
+}
+
+.dining-card:active {
+    transform: scale(0.97);
+}
+
+.dining-card.selected {
+    border-color: var(--color-gold);
+    background: linear-gradient(160deg, #2d2410 0%, #1f1a0e 100%);
+    box-shadow: 0 0 35px rgba(255, 193, 7, 0.5);
+}
+
+.dining-icon-box {
+    width: 140px;
+    height: 140px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(circle, rgba(255, 193, 7, 0.2) 0%, rgba(211, 47, 47, 0.1) 70%);
+    border: 3px solid rgba(255, 193, 7, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4.5rem;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    transition: transform var(--transition-normal);
+}
+
+.dining-card:hover .dining-icon-box {
+    transform: scale(1.08) rotate(3deg);
+    border-color: var(--color-gold);
+}
+
+.dining-card-title {
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    font-weight: 800;
+    color: var(--color-surface-white);
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+}
+
+.dining-card-desc {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    max-width: 280px;
+    line-height: 1.4;
+}
+
+.dining-tag {
+    margin-top: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-gold);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    padding: 0.35rem 1.25rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   6. RODAPÉ DO TOTEM (Footer Fragment)
+   -------------------------------------------------------------------------- */
+.totem-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background-color: rgba(18, 18, 18, 0.95);
+    border-top: 2px solid var(--color-border);
+    z-index: 100;
+}
+
+.footer-btn-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.footer-info {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   7. ADAPTAÇÕES RESPONSIVAS E MEDIA QUERIES
+   -------------------------------------------------------------------------- */
+
+/* Totem Kiosk Vertical (1080x1920) */
+@media (orientation: portrait) and (min-width: 900px) {
+    .totem-viewport {
+        height: 100vh;
+        max-height: 1920px;
+    }
+
+    .brand-logo-img {
+        width: 72px;
+        height: 72px;
+    }
+
+    .brand-title {
+        font-size: var(--font-size-2xl);
+    }
+
+    .carousel-slides {
+        height: 520px;
+    }
+
+    .promo-art {
+        width: 360px;
+        height: 360px;
+    }
+
+    .promo-title {
+        font-size: 2.8rem;
+    }
+
+    .dining-card {
+        min-height: 440px;
+        padding: var(--spacing-2xl);
+    }
+
+    .dining-icon-box {
+        width: 170px;
+        height: 170px;
+        font-size: 5.5rem;
+    }
+
+    .btn-totem-start {
+        min-height: 96px;
+        font-size: 2rem;
+        padding: 1.5rem 4.5rem;
+    }
+}
+
+/* Telas Desktop / Widescreen (1920x1080) */
+@media (min-width: 1200px) and (orientation: landscape) {
+    .totem-main {
+        max-width: 1280px;
+    }
+
+    .promo-carousel {
+        max-width: 900px;
+    }
+
+    .dining-cards-container {
+        max-width: 860px;
+    }
+}
+
+/* Tablets e Telas Médias (max-width: 899px) */
+@media (max-width: 899px) {
+    .dining-cards-container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+        max-width: 480px;
+    }
+
+    .dining-card {
+        min-height: 240px;
+        flex-direction: row;
+        text-align: left;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-lg);
+    }
+
+    .dining-icon-box {
+        width: 90px;
+        height: 90px;
+        font-size: 3rem;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .carousel-slides {
+        height: 320px;
+    }
+
+    .promo-visual {
+        flex: 0 0 35%;
+    }
+
+    .promo-art {
+        width: 180px;
+        height: 180px;
+    }
+}
+
+/* Smartphones e Telas Pequenas (max-width: 600px) */
+@media (max-width: 600px) {
+    .totem-header, .totem-footer {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .totem-main {
+        padding: var(--spacing-md);
+    }
+
+    .header-meta {
+        display: none;
+    }
+
+    .promo-slide {
+        flex-direction: column-reverse;
+        justify-content: center;
+        text-align: center;
+        padding: var(--spacing-md);
+    }
+
+    .promo-info {
+        padding-right: 0;
+        text-align: center;
+    }
+
+    .promo-desc {
+        display: none;
+    }
+
+    .promo-price-wrapper {
+        justify-content: center;
+    }
+
+    .promo-visual {
+        flex: 0 0 auto;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .promo-art {
+        width: 130px;
+        height: 130px;
+    }
+
+    .carousel-slides {
+        height: 310px;
+    }
+
+    .btn-totem-start {
+        width: 100%;
+        min-height: 64px;
+        font-size: var(--font-size-lg);
+        padding: 1rem 1.5rem;
+    }
+
+    .dining-card {
+        flex-direction: column;
+        text-align: center;
+        min-height: auto;
+    }
+
+    .dining-icon-box {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .footer-info {
+        display: none;
+    }
+
+    .footer-btn-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

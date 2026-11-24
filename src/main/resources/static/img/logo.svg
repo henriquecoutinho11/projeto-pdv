@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <radialGradient id="grad-logo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD54F" />
+      <stop offset="60%" stop-color="#FFC107" />
+      <stop offset="100%" stop-color="#FF8F00" />
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+  <!-- Fundo Circular Vermelho -->
+  <circle cx="60" cy="60" r="56" fill="#D32F2F" stroke="#FFC107" stroke-width="4" filter="url(#shadow)" />
+  <!-- Pão Superior -->
+  <path d="M 28 50 C 28 32 92 32 92 50 Z" fill="url(#grad-logo)" />
+  <!-- Gergelins -->
+  <ellipse cx="45" cy="40" rx="2" ry="1" fill="#FFF" opacity="0.8" />
+  <ellipse cx="60" cy="36" rx="2" ry="1" fill="#FFF" opacity="0.8" />
+  <ellipse cx="75" cy="40" rx="2" ry="1" fill="#FFF" opacity="0.8" />
+  <!-- Queijo Derretido -->
+  <polygon points="26,52 94,52 82,60 62,56 46,62 34,55" fill="#FFC107" />
+  <!-- Carne Hambúrguer -->
+  <rect x="25" y="58" width="70" height="12" rx="6" fill="#5D4037" />
+  <!-- Alface Ondulada -->
+  <path d="M 26 70 Q 34 76 42 70 Q 50 76 58 70 Q 66 76 74 70 Q 82 76 94 70" fill="none" stroke="#4CAF50" stroke-width="4" stroke-linecap="round" />
+  <!-- Pão Inferior -->
+  <path d="M 28 75 C 28 85 92 85 92 75 Z" fill="url(#grad-logo)" />
+  <!-- Estrela de Qualidade -->
+  <polygon points="60,94 63,101 70,101 64,105 66,112 60,108 54,112 56,105 50,101 57,101" fill="#FFC107" />
+</svg>
