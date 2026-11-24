@@ -60,6 +60,9 @@ public class Pedido implements Serializable {
     @Column(name = "data_hora_pagamento")
     private LocalDateTime dataHoraPagamento;
 
+    @Column(name = "data_hora_pronto")
+    private LocalDateTime dataHoraPronto;
+
     @Column(name = "codigo_transacao", length = 100)
     private String codigoTransacao;
 
@@ -190,6 +193,14 @@ public class Pedido implements Serializable {
 
     public void setDataHoraPagamento(LocalDateTime dataHoraPagamento) {
         this.dataHoraPagamento = dataHoraPagamento;
+    }
+
+    public LocalDateTime getDataHoraPronto() {
+        return dataHoraPronto;
+    }
+
+    public void setDataHoraPronto(LocalDateTime dataHoraPronto) {
+        this.dataHoraPronto = dataHoraPronto;
     }
 
     public String getCodigoTransacao() {

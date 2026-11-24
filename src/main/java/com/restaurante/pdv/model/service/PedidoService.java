@@ -215,6 +215,9 @@ public class PedidoService {
 
         StatusPedido statusAnterior = pedido.getStatus();
         pedido.setStatus(novoStatus);
+        if (novoStatus == StatusPedido.PRONTO && pedido.getDataHoraPronto() == null) {
+            pedido.setDataHoraPronto(LocalDateTime.now());
+        }
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
         // Notificar observadores sobre a alteração de status
