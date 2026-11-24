@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -431,6 +432,22 @@ class PedidoServiceTest {
         assertEquals("529.982.247-25", response.getCpfCliente());
         assertNotNull(response.getNumeroSenha());
         assertEquals("#001", response.getSenhaFormatada());
+    }
+
+    @Test
+    @DisplayName("Deve retornar conflito controlado quando o estoque muda simultaneamente")
+    void devePropagarConflitoOtimistaAoDebitarEstoque() {
+        burguer.setQuantidadeEstoque(1);
+        CustomizacaoItemDTO item = new CustomizacaoItemDTO(10L, 1);
+        NovoPedidoDTO dto = new NovoPedidoDTO(List.of(item));
+
+        when(produtoRepository.findById(10L)).thenReturn(Optional.of(burguer));
+        when(produtoRepository.save(burguer)).thenThrow(new OptimisticLockingFailureException("Conflito de versão"));
+
+        assertThrows(OptimisticLockingFailureException.class,
+                () -> pedidoService.processarNovoPedido(dto));
+        assertEquals(0, burguer.getQuantidadeEstoque());
+        verify(pedidoRepository, never()).save(any());
     }
 }
 

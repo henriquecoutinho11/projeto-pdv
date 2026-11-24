@@ -17,6 +17,7 @@ public class ProdutoResponseDTO implements Serializable {
     private Boolean ativo;
     private Long categoriaId;
     private String categoriaNome;
+    private Boolean estoqueBaixo;
 
     public ProdutoResponseDTO() {
     }
@@ -38,7 +39,7 @@ public class ProdutoResponseDTO implements Serializable {
         Long catId = entity.getCategoria() != null ? entity.getCategoria().getId() : null;
         String catNome = entity.getCategoria() != null ? entity.getCategoria().getNome() : null;
 
-        return new ProdutoResponseDTO(
+        ProdutoResponseDTO dto = new ProdutoResponseDTO(
                 entity.getId(),
                 entity.getNome(),
                 entity.getDescricao(),
@@ -49,6 +50,8 @@ public class ProdutoResponseDTO implements Serializable {
                 catId,
                 catNome
         );
+        dto.setEstoqueBaixo(entity.isEstoqueBaixo());
+        return dto;
     }
 
     public Long getId() {
@@ -121,5 +124,13 @@ public class ProdutoResponseDTO implements Serializable {
 
     public void setCategoriaNome(String categoriaNome) {
         this.categoriaNome = categoriaNome;
+    }
+
+    public Boolean getEstoqueBaixo() {
+        return estoqueBaixo;
+    }
+
+    public void setEstoqueBaixo(Boolean estoqueBaixo) {
+        this.estoqueBaixo = estoqueBaixo;
     }
 }
