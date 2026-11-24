@@ -18,6 +18,9 @@ public class ProdutoResponseDTO implements Serializable {
     private Long categoriaId;
     private String categoriaNome;
     private Boolean estoqueBaixo;
+    private String badge;
+    private Boolean esgotado;
+    private Boolean disponivel;
 
     public ProdutoResponseDTO() {
     }
@@ -51,6 +54,20 @@ public class ProdutoResponseDTO implements Serializable {
                 catNome
         );
         dto.setEstoqueBaixo(entity.isEstoqueBaixo());
+        dto.setEsgotado(entity.getQuantidadeEstoque() == null || entity.getQuantidadeEstoque() <= 0);
+        dto.setDisponivel(Boolean.TRUE.equals(entity.getAtivo()) && !dto.isEsgotado());
+
+        // Atribuição de Badges de Destaque Fast-Food
+        if (dto.isEsgotado()) {
+            dto.setBadge("Esgotado");
+        } else if (entity.getNome() != null && entity.getNome().toLowerCase().contains("smash")) {
+            dto.setBadge("Mais Vendido");
+        } else if (entity.getNome() != null && entity.getNome().toLowerCase().contains("combo")) {
+            dto.setBadge("Oferta do Dia");
+        } else if (entity.getNome() != null && (entity.getNome().toLowerCase().contains("tradicional") || entity.getNome().toLowerCase().contains("novo"))) {
+            dto.setBadge("Novo");
+        }
+
         return dto;
     }
 
@@ -132,5 +149,37 @@ public class ProdutoResponseDTO implements Serializable {
 
     public void setEstoqueBaixo(Boolean estoqueBaixo) {
         this.estoqueBaixo = estoqueBaixo;
+    }
+
+    public String getBadge() {
+        return badge;
+    }
+
+    public void setBadge(String badge) {
+        this.badge = badge;
+    }
+
+    public Boolean getEsgotado() {
+        return esgotado != null ? esgotado : (quantidadeEstoque == null || quantidadeEstoque <= 0);
+    }
+
+    public boolean isEsgotado() {
+        return Boolean.TRUE.equals(getEsgotado());
+    }
+
+    public void setEsgotado(Boolean esgotado) {
+        this.esgotado = esgotado;
+    }
+
+    public Boolean getDisponivel() {
+        return disponivel != null ? disponivel : (Boolean.TRUE.equals(ativo) && !isEsgotado());
+    }
+
+    public boolean isDisponivel() {
+        return Boolean.TRUE.equals(getDisponivel());
+    }
+
+    public void setDisponivel(Boolean disponivel) {
+        this.disponivel = disponivel;
     }
 }

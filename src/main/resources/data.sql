@@ -19,7 +19,8 @@ MERGE INTO produtos (id, nome, descricao, preco, quantidade_estoque, version, im
 (6, 'Coca-Cola 350ml', 'Lata de refrigerante trincando de gelada', 6.50, 120, 0, '/images/coca-cola.jpg', true, 3),
 (7, 'Suco Natural de Laranja 500ml', 'Suco 100% natural de laranja feito na hora sem adição de açúcar', 9.00, 60, 0, '/images/suco-laranja.jpg', true, 3),
 (8, 'Combo Antunes Especial', 'X-Salada Antunes + Batata Frita Crocante + Coca-Cola 350ml', 42.00, 25, 0, '/images/combo-especial.jpg', true, 4),
-(9, 'Milkshake de Chocolate 400ml', 'Milkshake cremoso feito com sorvete de baunilha e calda de chocolate', 18.00, 35, 0, '/images/milkshake.jpg', true, 5);
+(9, 'Milkshake de Chocolate 400ml', 'Milkshake cremoso feito com sorvete de baunilha e calda de chocolate', 18.00, 35, 0, '/images/milkshake.jpg', true, 5),
+(10, 'Antunes Monster Bacon', 'Três hambúrgueres artesanais 160g, triplo cheddar e farofa de bacon crocante', 39.90, 0, 0, '/images/x-burguer.jpg', true, 1);
 
 -- Opções Adicionais, Insumos e Opções de Combos (CARD-03)
 MERGE INTO opcoes_adicionais (id, nome, descricao, preco_extra, tipo, permite_remocao, ativo) KEY(id) VALUES
@@ -45,11 +46,12 @@ MERGE INTO opcoes_adicionais (id, nome, descricao, preco_extra, tipo, permite_re
 (16, 'Água Mineral sem Gás 500ml', 'Garrafa de água mineral', 0.00, 'BEBIDA', false, true);
 
 -- Vínculo de Produtos com Opções Disponíveis (produtos_opcoes)
--- Lanches (IDs 1, 2, 3): Adicionais (1..5) e Ingredientes Removíveis (6..10)
+-- Lanches (IDs 1, 2, 3): Adicionais (1..5), Remoções (6..10), Tamanhos Batata (11, 12) e Bebidas (13..16) para combos
 MERGE INTO produtos_opcoes (produto_id, opcao_id) KEY(produto_id, opcao_id) VALUES
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10),
-(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10),
-(3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10),
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16),
+(3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 15), (3, 16),
+(10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10),
 -- Combo Antunes Especial (ID 8): Adicionais (1..5), Remoções (6..10), Tamanhos (11, 12), Bebidas (13, 14, 15, 16)
 (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10),
 (8, 11), (8, 12), (8, 13), (8, 14), (8, 15), (8, 16);

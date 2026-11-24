@@ -16,7 +16,7 @@
     <link rel="stylesheet" th:href="@{/css/totem.css}">
     <link rel="icon" type="image/svg+xml" th:href="@{/img/logo.svg}">
 </head>
-<body class="totem-viewport">
+<body class="totem-viewport" th:data-abrir-cardapio="${abrirCardapioDireto != null && abrirCardapioDireto}">
 
     <!-- Fragmento do Cabeçalho -->
     <div th:replace="~{layout/header :: totem-header}"></div>
@@ -142,7 +142,397 @@
             <!-- Feedback de Seleção e Instruções -->
             <div id="dining-feedback" class="hidden" style="margin-top: var(--spacing-md); text-align: center;">
                 <div class="badge badge-gold" style="font-size: 1.1rem; padding: 0.75rem 1.75rem;">
-                    Opção selecionada! Redirecionando para o cardápio...
+                    Opção selecionada! Abrindo cardápio...
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             3. TELA DO CARDÁPIO DIGITAL & VITRINE DE PRODUTOS (CARD-12)
+             ==================================================================== -->
+        <section id="screen-menu" class="menu-screen hidden" aria-label="Catálogo do Cardápio">
+            
+            <!-- Barra Superior do Cardápio: Consumo Selecionado + Busca Touch + Filtros Rápidos -->
+            <div class="menu-topbar">
+                <div class="menu-topbar-left">
+                    <div class="current-dining-badge" id="current-dining-badge">
+                        <span class="dining-indicator-dot"></span>
+                        <span id="current-dining-label">Consumo no Salão</span>
+                        <button type="button" class="btn-change-dining" id="btn-change-dining" title="Trocar modalidade de consumo">Alterar</button>
+                    </div>
+                </div>
+
+                <!-- Campo de Busca Rápida Touch Friendly -->
+                <div class="menu-search-wrapper">
+                    <div class="search-input-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="menu-search-input" class="search-input" placeholder="Buscar no cardápio (ex: smash, batata, suco, milkshake)..." autocomplete="off">
+                        <button type="button" id="btn-clear-search" class="btn-clear-search hidden" aria-label="Limpar busca">✕</button>
+                    </div>
+                </div>
+
+                <!-- Filtros Rápidos (Pills) -->
+                <div class="quick-filters" id="quick-filters">
+                    <button type="button" class="quick-filter-btn active" data-filter="all">Todos</button>
+                    <button type="button" class="quick-filter-btn" data-filter="Mais Vendido">🔥 Mais Vendidos</button>
+                    <button type="button" class="quick-filter-btn" data-filter="Oferta do Dia">⭐ Ofertas do Dia</button>
+                    <button type="button" class="quick-filter-btn" data-filter="Novo">✨ Novos</button>
+                </div>
+            </div>
+
+            <!-- Corpo Principal do Cardápio: Barra Lateral de Categorias + Vitrine de Produtos -->
+            <div class="menu-layout">
+                
+                <!-- Barra Lateral de Categorias com Navegação Rápida e Toque Ergonômico -->
+                <aside class="category-sidebar" id="category-sidebar" aria-label="Categorias do Cardápio">
+                    <div class="category-sidebar-header">
+                        <span class="sidebar-title">Categorias</span>
+                    </div>
+
+                    <nav class="category-nav-list" id="category-nav-list">
+                        <!-- Categorias Principais (Renderizadas via Thymeleaf ou Fallback) -->
+                        <button type="button" class="category-nav-item active" data-category-id="1" data-target="cat-section-1">
+                            <span class="cat-icon">🍔</span>
+                            <span class="cat-name">Hambúrgueres Artesanais</span>
+                        </button>
+                        <button type="button" class="category-nav-item" data-category-id="4" data-target="cat-section-4">
+                            <span class="cat-icon">⭐</span>
+                            <span class="cat-name">Combos Especiais</span>
+                        </button>
+                        <button type="button" class="category-nav-item" data-category-id="2" data-target="cat-section-2">
+                            <span class="cat-icon">🍟</span>
+                            <span class="cat-name">Acompanhamentos &amp; Batatas</span>
+                        </button>
+                        <button type="button" class="category-nav-item" data-category-id="3" data-target="cat-section-3">
+                            <span class="cat-icon">🥤</span>
+                            <span class="cat-name">Bebidas &amp; Sucos</span>
+                        </button>
+                        <button type="button" class="category-nav-item" data-category-id="5" data-target="cat-section-5">
+                            <span class="cat-icon">🍦</span>
+                            <span class="cat-name">Sobremesas &amp; Shakes</span>
+                        </button>
+                    </nav>
+                </aside>
+
+                <!-- Área de Rolagem do Catálogo de Produtos -->
+                <div class="menu-catalog-container" id="menu-catalog-container">
+
+                    <!-- Estado Vazio para Busca sem Resultados -->
+                    <div id="search-empty-state" class="search-empty-state hidden">
+                        <div class="empty-icon">🔍</div>
+                        <h3 class="empty-title">Nenhum produto encontrado</h3>
+                        <p class="empty-desc">Não encontramos itens que correspondam ao termo buscado. Tente outro nome ou limpe a busca.</p>
+                        <button type="button" class="btn btn-gold" id="btn-reset-search-empty">Ver Todo o Cardápio</button>
+                    </div>
+
+                    <!-- Seção 1: Hambúrgueres Artesanais -->
+                    <section class="menu-category-section" id="cat-section-1" data-category-id="1">
+                        <div class="category-section-header">
+                            <div class="cat-heading-left">
+                                <span class="cat-section-icon">🍔</span>
+                                <div>
+                                    <h3 class="cat-section-title">Hambúrgueres Artesanais</h3>
+                                    <p class="cat-section-desc">Pães brioche selados na manteiga, carnes nobres grelhadas no fogo e molhos artesanais exclusivos.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-gold">Feitos na Hora</span>
+                        </div>
+
+                        <div class="products-grid">
+                            <!-- Produto 1: X-Burguer Tradicional -->
+                            <article class="product-card" data-product-id="1" data-category-id="1" data-badge="Novo" data-stock="50">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-new">✨ Novo</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/burger-hero.svg}" alt="X-Burguer Tradicional" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">X-Burguer Tradicional</h4>
+                                    <p class="product-desc">Pão brioche fofinho, hambúrguer 160g suculento, queijo prato derretido e maionese da casa temperada.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">22,90</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="1">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <!-- Produto 2: X-Salada Antunes -->
+                            <article class="product-card" data-product-id="2" data-category-id="1" data-badge="Mais Vendido" data-stock="45">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-bestseller">🔥 Mais Vendido</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/burger-hero.svg}" alt="X-Salada Antunes" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">X-Salada Antunes</h4>
+                                    <p class="product-desc">Pão brioche, hambúrguer 160g, queijo prato, alface americana fresca, rodelas de tomate e maionese especial.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">25,90</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="2">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <!-- Produto 3: Antunes Smash Duplo -->
+                            <article class="product-card" data-product-id="3" data-category-id="1" data-badge="Mais Vendido" data-stock="30">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-bestseller">🔥 Mais Vendido</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/burger-hero.svg}" alt="Antunes Smash Duplo" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Antunes Smash Duplo</h4>
+                                    <p class="product-desc">Dois smashes artesanais de 90g com crostinha crocante, queijo cheddar duplo derretido, bacon em tiras e molho especial.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">29,90</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="3">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <!-- Produto 10: Antunes Monster Bacon (Esgotado - Teste de Estoque Zero) -->
+                            <article class="product-card is-out-of-stock" data-product-id="10" data-category-id="1" data-badge="Esgotado" data-stock="0" aria-disabled="true">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-out-of-stock">🚫 Esgotado</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/burger-hero.svg}" alt="Antunes Monster Bacon" class="product-art">
+                                    <div class="out-of-stock-overlay">
+                                        <span>Esgotado</span>
+                                    </div>
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Antunes Monster Bacon</h4>
+                                    <p class="product-desc">Três hambúrgueres artesanais 160g, triplo cheddar cremoso e farofa de bacon crocante abundante.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">39,90</span>
+                                        </div>
+                                        <button type="button" class="btn btn-outline btn-disabled-stock" disabled aria-disabled="true">
+                                            Indisponível
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Seção 4: Combos Especiais -->
+                    <section class="menu-category-section" id="cat-section-4" data-category-id="4">
+                        <div class="category-section-header">
+                            <div class="cat-heading-left">
+                                <span class="cat-section-icon">⭐</span>
+                                <div>
+                                    <h3 class="cat-section-title">Combos Especiais</h3>
+                                    <p class="cat-section-desc">A experiência completa: lanche suculento + acompanhamento crocante + bebida geladinha com super desconto.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-gold">Melhor Custo-Benefício</span>
+                        </div>
+
+                        <div class="products-grid">
+                            <!-- Produto 8: Combo Antunes Especial -->
+                            <article class="product-card" data-product-id="8" data-category-id="4" data-badge="Oferta do Dia" data-stock="25">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-deal">⭐ Oferta do Dia</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/combo-hero.svg}" alt="Combo Antunes Especial" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Combo Antunes Especial</h4>
+                                    <p class="product-desc">X-Salada Antunes 160g + Batata Frita Crocante sequinha + Refrigerante Lata 350ml trincando de gelado.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-old">R$ 46,40</span>
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">42,00</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="8">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Seção 2: Acompanhamentos & Batatas -->
+                    <section class="menu-category-section" id="cat-section-2" data-category-id="2">
+                        <div class="category-section-header">
+                            <div class="cat-heading-left">
+                                <span class="cat-section-icon">🍟</span>
+                                <div>
+                                    <h3 class="cat-section-title">Acompanhamentos &amp; Batatas</h3>
+                                    <p class="cat-section-desc">Porções douradas, super sequinhas e crocantes para acompanhar seu lanche favorito.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-gold">Crocância Pura</span>
+                        </div>
+
+                        <div class="products-grid">
+                            <!-- Produto 4: Batata Frita Crocante -->
+                            <article class="product-card" data-product-id="4" data-category-id="2" data-badge="Mais Vendido" data-stock="100">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-bestseller">🔥 Mais Vendido</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/fries.svg}" alt="Batata Frita Crocante" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Batata Frita Crocante</h4>
+                                    <p class="product-desc">Porção de 200g de batata palito artesanal, dourada, bem crocante por fora e macia por dentro.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">14,00</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="4">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <!-- Produto 5: Anéis de Cebola (Onion Rings) -->
+                            <article class="product-card" data-product-id="5" data-category-id="2" data-badge="" data-stock="40">
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/onion-rings.svg}" alt="Anéis de Cebola (Onion Rings)" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Anéis de Cebola (Onion Rings)</h4>
+                                    <p class="product-desc">Porção com 10 anéis de cebola selecionados, empanados em farinha temperada e fritos na perfeição.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">16,00</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="5">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Seção 3: Bebidas & Sucos -->
+                    <section class="menu-category-section" id="cat-section-3" data-category-id="3">
+                        <div class="category-section-header">
+                            <div class="cat-heading-left">
+                                <span class="cat-section-icon">🥤</span>
+                                <div>
+                                    <h3 class="cat-section-title">Bebidas &amp; Sucos</h3>
+                                    <p class="cat-section-desc">Refrigerantes em lata, sucos 100% naturais espremidos na hora e água mineral geladíssima.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-gold">Geladinho</span>
+                        </div>
+
+                        <div class="products-grid">
+                            <!-- Produto 6: Coca-Cola 350ml -->
+                            <article class="product-card" data-product-id="6" data-category-id="3" data-badge="" data-stock="120">
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/drink.svg}" alt="Coca-Cola 350ml" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Coca-Cola 350ml</h4>
+                                    <p class="product-desc">Lata de refrigerante tradicional trincando de gelada para acompanhar seu lanche.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">6,50</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="6">
+                                            Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <!-- Produto 7: Suco Natural de Laranja 500ml -->
+                            <article class="product-card" data-product-id="7" data-category-id="3" data-badge="Novo" data-stock="60">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-new">✨ 100% Natural</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/drink.svg}" alt="Suco Natural de Laranja" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Suco Natural de Laranja 500ml</h4>
+                                    <p class="product-desc">Suco 100% natural de laranja pêra feito na hora, super refrescante e sem conservantes.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">9,00</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="7">
+                                            Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Seção 5: Sobremesas & Shakes -->
+                    <section class="menu-category-section" id="cat-section-5" data-category-id="5">
+                        <div class="category-section-header">
+                            <div class="cat-heading-left">
+                                <span class="cat-section-icon">🍦</span>
+                                <div>
+                                    <h3 class="cat-section-title">Sobremesas &amp; Shakes</h3>
+                                    <p class="cat-section-desc">Finalize sua refeição com nossos milkshakes batidos artesanalmente com sorvete premium.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-gold">Cremosidade Total</span>
+                        </div>
+
+                        <div class="products-grid">
+                            <!-- Produto 9: Milkshake de Chocolate 400ml -->
+                            <article class="product-card" data-product-id="9" data-category-id="5" data-badge="Mais Vendido" data-stock="35">
+                                <div class="product-badge-wrapper">
+                                    <span class="product-badge badge-bestseller">🔥 Mais Vendido</span>
+                                </div>
+                                <div class="product-image-box">
+                                    <img th:src="@{/img/shake-hero.svg}" alt="Milkshake de Chocolate" class="product-art">
+                                </div>
+                                <div class="product-content">
+                                    <h4 class="product-title">Milkshake de Chocolate 400ml</h4>
+                                    <p class="product-desc">Milkshake cremoso feito com sorvete de baunilha, calda artesanal de chocolate belga e chantilly.</p>
+                                    <div class="product-footer">
+                                        <div class="product-price-box">
+                                            <span class="product-price-currency">R$</span>
+                                            <span class="product-price-value">18,00</span>
+                                        </div>
+                                        <button type="button" class="btn btn-gold btn-add-product" data-product-id="9">
+                                            Personalizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
                 </div>
             </div>
         </section>
@@ -194,6 +584,276 @@
                 <button type="button" class="btn btn-outline" id="btn-close-help">
                     Voltar ao Pedido
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: PERSONALIZAÇÃO DE LANCHE ("MONTE SEU LANCHE" - McDONALD'S STYLE)
+         ==================================================================== -->
+    <div id="modal-customizacao" class="modal-overlay custom-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="custom-modal-title">
+        <div class="custom-modal-drawer">
+            
+            <!-- Cabeçalho do Modal de Personalização -->
+            <header class="custom-modal-header">
+                <div class="custom-header-media">
+                    <img id="modal-product-img" th:src="@{/img/burger-hero.svg}" alt="Foto do Produto" class="custom-header-art">
+                </div>
+                <div class="custom-header-info">
+                    <span class="badge badge-gold" id="modal-product-category">Hambúrguer Artesanal</span>
+                    <h3 class="custom-modal-title" id="custom-modal-title">Antunes Smash Duplo</h3>
+                    <p class="custom-modal-desc" id="modal-product-desc">Dois smashes artesanais de 90g com queijo cheddar duplo derretido, tiras de bacon crocante e molho especial.</p>
+                    <div class="custom-header-base-price">
+                        <span>Preço base:</span>
+                        <strong id="modal-product-base-price">R$ 29,90</strong>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" id="btn-close-custom-modal" aria-label="Fechar e voltar ao cardápio">
+                    ✕
+                </button>
+            </header>
+
+            <!-- Corpo Rolável com as Seções de Customização McDonald's Style -->
+            <div class="custom-modal-body">
+
+                <!-- 1. Seção: Adicionais do Chefe -->
+                <section class="custom-section" id="section-adicionais">
+                    <div class="custom-section-title-box">
+                        <span class="section-emoji">🥓</span>
+                        <div>
+                            <h4 class="custom-section-heading">Adicionais do Chefe</h4>
+                            <p class="custom-section-subheading">Turbine seu lanche com insumos extras selecionados.</p>
+                        </div>
+                    </div>
+
+                    <div class="options-grid" id="container-adicionais">
+                        <!-- Card de Opção: Queijo Cheddar Extra -->
+                        <label class="option-check-card" data-opcao-id="2" data-tipo="ADICIONAL" data-preco="3.00">
+                            <input type="checkbox" class="option-checkbox" value="2" data-nome="Queijo Cheddar Extra" data-preco="3.00">
+                            <div class="option-card-body">
+                                <span class="option-name">+ Queijo Cheddar Extra</span>
+                                <span class="option-desc">Fatia generosa de cheddar cremoso derretido</span>
+                            </div>
+                            <span class="option-price-tag">+ R$ 3,00</span>
+                        </label>
+
+                        <!-- Card de Opção: Bacon Crocante -->
+                        <label class="option-check-card" data-opcao-id="1" data-tipo="ADICIONAL" data-preco="3.50">
+                            <input type="checkbox" class="option-checkbox" value="1" data-nome="Bacon Crocante" data-preco="3.50">
+                            <div class="option-card-body">
+                                <span class="option-name">+ Bacon Crocante</span>
+                                <span class="option-desc">Tiras fatiadas super sequinhas e crocantes</span>
+                            </div>
+                            <span class="option-price-tag">+ R$ 3,50</span>
+                        </label>
+
+                        <!-- Card de Opção: Hambúrguer Extra -->
+                        <label class="option-check-card" data-opcao-id="3" data-tipo="ADICIONAL" data-preco="7.00">
+                            <input type="checkbox" class="option-checkbox" value="3" data-nome="Hambúrguer 160g Adicional" data-preco="7.00">
+                            <div class="option-card-body">
+                                <span class="option-name">+ Hambúrguer 160g Extra</span>
+                                <span class="option-desc">Carne nobre extra grelhada ao ponto</span>
+                            </div>
+                            <span class="option-price-tag">+ R$ 7,00</span>
+                        </label>
+
+                        <!-- Card de Opção: Molho Especial Antunes -->
+                        <label class="option-check-card" data-opcao-id="4" data-tipo="ADICIONAL" data-preco="2.00">
+                            <input type="checkbox" class="option-checkbox" value="4" data-nome="Molho Especial da Casa" data-preco="2.00">
+                            <div class="option-card-body">
+                                <span class="option-name">+ Molho Especial Antunes</span>
+                                <span class="option-desc">Porção generosa da nossa receita secreta</span>
+                            </div>
+                            <span class="option-price-tag">+ R$ 2,00</span>
+                        </label>
+
+                        <!-- Card de Opção: Cebola Caramelizada -->
+                        <label class="option-check-card" data-opcao-id="5" data-tipo="ADICIONAL" data-preco="3.00">
+                            <input type="checkbox" class="option-checkbox" value="5" data-nome="Cebola Caramelizada" data-preco="3.00">
+                            <div class="option-card-body">
+                                <span class="option-name">+ Cebola Caramelizada</span>
+                                <span class="option-desc">Dourada lentamente na chapa</span>
+                            </div>
+                            <span class="option-price-tag">+ R$ 3,00</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- 2. Seção: Personalize seus Ingredientes (Remoções de Itens Padrão) -->
+                <section class="custom-section" id="section-remocoes">
+                    <div class="custom-section-title-box">
+                        <span class="section-emoji">🧅</span>
+                        <div>
+                            <h4 class="custom-section-heading">Personalize seus Ingredientes</h4>
+                            <p class="custom-section-subheading">Prefere sem algum ingrediente? Toque para remover sem custo adicional.</p>
+                        </div>
+                    </div>
+
+                    <div class="removals-toggle-container" id="container-remocoes">
+                        <!-- Toggle Sem Cebola -->
+                        <button type="button" class="btn-removal-toggle" data-opcao-id="6" data-nome="Sem cebola">
+                            <span class="removal-icon">🚫</span>
+                            <span class="removal-label">Sem cebola</span>
+                        </button>
+
+                        <!-- Toggle Sem Picles -->
+                        <button type="button" class="btn-removal-toggle" data-opcao-id="7" data-nome="Sem picles">
+                            <span class="removal-icon">🚫</span>
+                            <span class="removal-label">Sem picles</span>
+                        </button>
+
+                        <!-- Toggle Sem Alface -->
+                        <button type="button" class="btn-removal-toggle" data-opcao-id="8" data-nome="Sem alface">
+                            <span class="removal-icon">🚫</span>
+                            <span class="removal-label">Sem salada (alface)</span>
+                        </button>
+
+                        <!-- Toggle Sem Tomate -->
+                        <button type="button" class="btn-removal-toggle" data-opcao-id="9" data-nome="Sem tomate">
+                            <span class="removal-icon">🚫</span>
+                            <span class="removal-label">Sem tomate</span>
+                        </button>
+
+                        <!-- Toggle Sem Molho / Maionese -->
+                        <button type="button" class="btn-removal-toggle" data-opcao-id="10" data-nome="Sem maionese">
+                            <span class="removal-icon">🚫</span>
+                            <span class="removal-label">Sem molho</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. Seção: Transforme em Combo (Seleção de Batata e Bebida) -->
+                <section class="custom-section" id="section-combo-upgrade">
+                    <div class="custom-section-title-box">
+                        <span class="section-emoji">⭐</span>
+                        <div>
+                            <h4 class="custom-section-heading">Transforme em Combo</h4>
+                            <p class="custom-section-subheading">Escolha o tamanho do seu acompanhamento e a bebida gelada ideal.</p>
+                        </div>
+                    </div>
+
+                    <!-- Seletor de Tamanho da Batata -->
+                    <div class="combo-subgroup">
+                        <span class="combo-subgroup-title">🍟 Tamanho da Batata Frita:</span>
+                        <div class="combo-radio-group" id="group-tamanho-batata">
+                            <label class="combo-radio-card active">
+                                <input type="radio" name="tamanhoBatata" value="11" data-nome="Batata Média" data-preco="0.00" checked>
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Batata Média</span>
+                                    <span class="combo-radio-desc">Tamanho padrão crocante</span>
+                                </div>
+                                <span class="combo-badge-included">Incluso</span>
+                            </label>
+
+                            <label class="combo-radio-card">
+                                <input type="radio" name="tamanhoBatata" value="12" data-nome="Batata Grande" data-preco="4.00">
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Batata Grande</span>
+                                    <span class="combo-radio-desc">Upgrade de tamanho para quem ama batata</span>
+                                </div>
+                                <span class="combo-price-diff">+ R$ 4,00</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Seletor de Bebida -->
+                    <div class="combo-subgroup" style="margin-top: var(--spacing-md);">
+                        <span class="combo-subgroup-title">🥤 Escolha sua Bebida:</span>
+                        <div class="combo-radio-group" id="group-bebida">
+                            <label class="combo-radio-card active">
+                                <input type="radio" name="bebida" value="13" data-nome="Coca-Cola 350ml" data-preco="0.00" checked>
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Coca-Cola Lata 350ml</span>
+                                    <span class="combo-radio-desc">Gelada</span>
+                                </div>
+                                <span class="combo-badge-included">Incluso</span>
+                            </label>
+
+                            <label class="combo-radio-card">
+                                <input type="radio" name="bebida" value="14" data-nome="Guaraná Antarctica 350ml" data-preco="0.00">
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Guaraná Antarctica 350ml</span>
+                                    <span class="combo-radio-desc">Gelado</span>
+                                </div>
+                                <span class="combo-badge-included">Incluso</span>
+                            </label>
+
+                            <label class="combo-radio-card">
+                                <input type="radio" name="bebida" value="15" data-nome="Suco Natural de Laranja 500ml" data-preco="2.50">
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Suco Natural Laranja 500ml</span>
+                                    <span class="combo-radio-desc">Upgrade 100% fruta</span>
+                                </div>
+                                <span class="combo-price-diff">+ R$ 2,50</span>
+                            </label>
+
+                            <label class="combo-radio-card">
+                                <input type="radio" name="bebida" value="16" data-nome="Água Mineral 500ml" data-preco="0.00">
+                                <div class="combo-radio-info">
+                                    <span class="combo-radio-name">Água Mineral sem Gás 500ml</span>
+                                    <span class="combo-radio-desc">Garrafa</span>
+                                </div>
+                                <span class="combo-badge-included">Incluso</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. Seção: Observações Especiais para a Cozinha -->
+                <section class="custom-section" id="section-observacoes">
+                    <div class="custom-section-title-box">
+                        <span class="section-emoji">✍️</span>
+                        <div>
+                            <h4 class="custom-section-heading">Observações para a Cozinha</h4>
+                            <p class="custom-section-subheading">Alguma preferência de ponto ou embalagem? Digite abaixo.</p>
+                        </div>
+                    </div>
+                    <textarea id="modal-item-observacoes" class="custom-textarea" rows="2" maxlength="120" placeholder="Ex: Hambúrguer bem passado, sem gelo no copo..."></textarea>
+                </section>
+
+            </div>
+
+            <!-- Rodapé Fixo do Modal: Quantidade + Cálculo Dinâmico e Animado + Botão Adicionar -->
+            <footer class="custom-modal-footer">
+                <div class="modal-footer-left">
+                    <div class="quantity-stepper" role="group" aria-label="Quantidade do Item">
+                        <button type="button" class="stepper-btn" id="btn-qty-minus" aria-label="Diminuir quantidade">−</button>
+                        <span class="stepper-value" id="modal-qty-value">1</span>
+                        <button type="button" class="stepper-btn" id="btn-qty-plus" aria-label="Aumentar quantidade">+</button>
+                    </div>
+
+                    <div class="dynamic-price-box">
+                        <span class="dynamic-price-label">Total do Item:</span>
+                        <div class="dynamic-price-display">
+                            <span class="dynamic-currency">R$</span>
+                            <span class="dynamic-amount animate-price" id="modal-dynamic-total">29,90</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-right">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-custom-modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-gold btn-add-to-cart animate-pulse-glow" id="btn-confirm-add-cart">
+                        <span class="btn-icon">🛒</span>
+                        <span>Adicionar ao Pedido</span>
+                    </button>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         FEEDBACK TOAST FLUTUANTE (Item Adicionado com Sucesso)
+         ==================================================================== -->
+    <div id="totem-toast" class="totem-toast hidden" role="status" aria-live="polite">
+        <div class="toast-content">
+            <span class="toast-icon">✅</span>
+            <div class="toast-text-box">
+                <strong id="toast-title">Item Adicionado!</strong>
+                <span id="toast-message">Antunes Smash Duplo incluído no carrinho.</span>
             </div>
         </div>
     </div>
