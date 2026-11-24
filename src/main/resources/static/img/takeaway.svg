@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D7CCC8" />
+      <stop offset="40%" stop-color="#BCAAA4" />
+      <stop offset="100%" stop-color="#8D6E63" />
+    </linearGradient>
+  </defs>
+  <!-- Alças da Sacola Kraft -->
+  <path d="M 42 42 C 42 16, 78 16, 78 42" fill="none" stroke="#5D4037" stroke-width="5" stroke-linecap="round" />
+  <path d="M 48 42 C 48 24, 72 24, 72 42" fill="none" stroke="#3E2723" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Corpo da Sacola de Papel Kraft -->
+  <path d="M 25 40 L 95 40 L 88 105 L 32 105 Z" fill="url(#bagGrad)" stroke="#5D4037" stroke-width="2" />
+  <!-- Dobra Superior Serrilhada do Papel -->
+  <path d="M 23 40 L 97 40 L 95 45 L 25 45 Z" fill="#A1887F" />
+  
+  <!-- Emblema / Selo do Antunes na Sacola -->
+  <circle cx="60" cy="72" r="18" fill="#D32F2F" stroke="#FFC107" stroke-width="2" />
+  <!-- Hambúrguer estilizado no selo -->
+  <path d="M 49 70 C 49 63, 71 63, 71 70 Z" fill="#FFC107" />
+  <rect x="49" y="72" width="22" height="3" rx="1.5" fill="#3E2723" />
+  <path d="M 50 76 C 50 79, 70 79, 70 76 Z" fill="#FFC107" />
+  
+  <!-- Vapor Aromático / Quentinho -->
+  <path d="M 48 16 Q 52 10 48 4" fill="none" stroke="#FFC107" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />
+  <path d="M 60 14 Q 64 8 60 2" fill="none" stroke="#FFC107" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />
+  <path d="M 72 16 Q 76 10 72 4" fill="none" stroke="#FFC107" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />
+</svg>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Antunes Lanches - Totem de Autoatendimento</title>
+
+    <!-- Google Fonts Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Design System Antunes Lanches -->
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/totem.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/logo.svg}">
+</head>
+<body class="totem-viewport">
+
+    <!-- Fragmento do Cabeçalho -->
+    <div th:replace="~{layout/header :: totem-header}"></div>
+
+    <!-- Área Principal do Totem -->
+    <main class="totem-main">
+
+        <!-- ====================================================================
+             1. TELA DE DESCANSO / BOAS-VINDAS (Idle / Welcome Screen)
+             ==================================================================== -->
+        <section id="screen-welcome" class="welcome-screen" aria-label="Tela Inicial de Boas-Vindas">
+            <!-- Hero / Chamada de Acolhimento -->
+            <div class="welcome-hero">
+                <span class="badge badge-gold welcome-badge">★ Artesanal &bull; Suculento &bull; Rápido ★</span>
+                <h2 class="welcome-title">Bateu aquela fome?</h2>
+                <p class="welcome-subtitle">O melhor hambúrguer artesanal da região espera por você!</p>
+            </div>
+
+            <!-- Carrossel Rotativo de Ofertas e Destaques -->
+            <div class="promo-carousel" id="promo-carousel" role="region" aria-label="Banners Promocionais">
+                <div class="carousel-slides">
+                    <!-- Slide 1: Smash Duplo -->
+                    <div class="promo-slide active" data-slide="0">
+                        <div class="promo-info">
+                            <span class="promo-tag">Mais Vendido 🔥</span>
+                            <h3 class="promo-title">Antunes Smash Duplo</h3>
+                            <p class="promo-desc">Dois smashes artesanais de 90g com queijo cheddar duplo derretido, tiras de bacon crocante e molho especial.</p>
+                            <div class="promo-price-wrapper">
+                                <span class="promo-price-label">Apenas</span>
+                                <span class="promo-price">R$ 29,90</span>
+                            </div>
+                        </div>
+                        <div class="promo-visual">
+                            <img th:src="@{/img/burger-hero.svg}" alt="Antunes Smash Duplo" class="promo-art">
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: Combo Especial -->
+                    <div class="promo-slide" data-slide="1">
+                        <div class="promo-info">
+                            <span class="promo-tag" style="background-color: var(--color-gold); color: #121212;">Combo Completo ⭐</span>
+                            <h3 class="promo-title">Combo Especial Antunes</h3>
+                            <p class="promo-desc">X-Salada Antunes + Batata Frita Crocante sequinha + Refrigerante Lata 350ml trincando de gelado.</p>
+                            <div class="promo-price-wrapper">
+                                <span class="promo-price-label">De R$ 46,40 por</span>
+                                <span class="promo-price">R$ 42,00</span>
+                            </div>
+                        </div>
+                        <div class="promo-visual">
+                            <img th:src="@{/img/combo-hero.svg}" alt="Combo Especial Antunes" class="promo-art">
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Milkshake de Chocolate -->
+                    <div class="promo-slide" data-slide="2">
+                        <div class="promo-info">
+                            <span class="promo-tag" style="background-color: #8E24AA;">Sobremesa Imperdível 🍦</span>
+                            <h3 class="promo-title">Milkshake Cremoso 400ml</h3>
+                            <p class="promo-desc">Sorvete de baunilha batido com calda artesanal de chocolate belga, chantilly espesso e cereja ao topo.</p>
+                            <div class="promo-price-wrapper">
+                                <span class="promo-price-label">Por apenas</span>
+                                <span class="promo-price">R$ 18,00</span>
+                            </div>
+                        </div>
+                        <div class="promo-visual">
+                            <img th:src="@{/img/shake-hero.svg}" alt="Milkshake Cremoso" class="promo-art">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicadores de Slide -->
+                <div class="carousel-dots" id="carousel-dots">
+                    <button class="carousel-dot active" data-index="0" aria-label="Slide 1"></button>
+                    <button class="carousel-dot" data-index="1" aria-label="Slide 2"></button>
+                    <button class="carousel-dot" data-index="2" aria-label="Slide 3"></button>
+                </div>
+            </div>
+
+            <!-- Botão de Toque Central -->
+            <div class="welcome-action-box">
+                <button type="button" class="btn btn-gold btn-totem-start animate-pulse-glow" id="btn-start-order">
+                    Toque aqui para começar
+                </button>
+                <div class="touch-hint">
+                    <span class="touch-hand-icon">👆</span>
+                    <span>Toque na tela em qualquer lugar para pedir</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             2. TELA DE MODALIDADE DE CONSUMO (Dining Option Screen)
+             ==================================================================== -->
+        <section id="screen-dining" class="dining-screen hidden" aria-label="Escolha de Modalidade de Consumo">
+            <div class="dining-header">
+                <span class="badge badge-red" style="margin-bottom: var(--spacing-sm);">Passo 1 de 4</span>
+                <h2 class="dining-title">Como você prefere saborear?</h2>
+                <p class="dining-subtitle">Selecione onde deseja consumir seu pedido para prepararmos sua refeição da melhor forma</p>
+            </div>
+
+            <div class="dining-cards-container">
+                <!-- Card 1: Para Comer Aqui -->
+                <div class="dining-card card-clickable" id="card-comer-aqui" data-modalidade="COMER_AQUI" tabindex="0" role="button" aria-label="Para Comer Aqui - Consumo no Salão">
+                    <div class="dining-icon-box">
+                        <img th:src="@{/img/dine-in.svg}" alt="Comer Aqui" width="90" height="90">
+                    </div>
+                    <h3 class="dining-card-title">Para Comer Aqui</h3>
+                    <p class="dining-card-desc">Servido na bandeja quentinho com guardanapos para você aproveitar confortavelmente em nossas mesas.</p>
+                    <span class="dining-tag">🍽️ Consumo no Salão</span>
+                </div>
+
+                <!-- Card 2: Para Viagem -->
+                <div class="dining-card card-clickable" id="card-para-viagem" data-modalidade="PARA_VIAGEM" tabindex="0" role="button" aria-label="Para Viagem - Embalagem para Viagem">
+                    <div class="dining-icon-box">
+                        <img th:src="@{/img/takeaway.svg}" alt="Para Viagem" width="90" height="90">
+                    </div>
+                    <h3 class="dining-card-title">Para Viagem</h3>
+                    <p class="dining-card-desc">Embalado com carinho em sacola térmica reforçada, ideal para transportar com segurança até seu destino.</p>
+                    <span class="dining-tag">🛍️ Embalagem Reforçada</span>
+                </div>
+            </div>
+
+            <!-- Feedback de Seleção e Instruções -->
+            <div id="dining-feedback" class="hidden" style="margin-top: var(--spacing-md); text-align: center;">
+                <div class="badge badge-gold" style="font-size: 1.1rem; padding: 0.75rem 1.75rem;">
+                    Opção selecionada! Redirecionando para o cardápio...
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Fragmento do Rodapé -->
+    <div th:replace="~{layout/footer :: totem-footer}"></div>
+
+    <!-- ====================================================================
+         MODAL 1: ALERTA DE INATIVIDADE (60 segundos)
+         ==================================================================== -->
+    <div id="inactivity-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inactivity-title">
+        <div class="modal-box">
+            <div class="modal-icon modal-icon-warning">
+                ⏳
+            </div>
+            <h3 class="modal-title" id="inactivity-title">Ainda está aí?</h3>
+            <p class="modal-text">Percebemos que você não interagiu com a tela há algum tempo. Para sua segurança e privacidade, seu atendimento será cancelado automaticamente.</p>
+            
+            <div class="countdown-circle" id="inactivity-countdown">10</div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-gold" id="btn-keep-session">
+                    Continuar Atendimento
+                </button>
+                <button type="button" class="btn btn-outline" id="btn-cancel-session">
+                    Encerrar Atendimento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: AJUDA AO CLIENTE
+         ==================================================================== -->
+    <div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-box">
+            <div class="modal-icon" style="background-color: rgba(211, 47, 47, 0.15); border: 2px solid var(--color-primary); color: var(--color-primary);">
+                👋
+            </div>
+            <h3 class="modal-title" id="help-title">Precisa de Ajuda?</h3>
+            <p class="modal-text">Nosso atendimento é 100% intuitivo! Caso tenha dúvidas ou queira pagar em dinheiro, solicite o apoio de nossa equipe no balcão.</p>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-gold" id="btn-call-attendant">
+                    Chamar Atendente no Totem
+                </button>
+                <button type="button" class="btn btn-outline" id="btn-close-help">
+                    Voltar ao Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Principal do Totem -->
+    <script th:src="@{/js/totem.js}"></script>
+</body>
+</html>

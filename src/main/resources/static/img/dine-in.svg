@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="trayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD54F" />
+      <stop offset="100%" stop-color="#FFB300" />
+    </linearGradient>
+  </defs>
+  <!-- Bandeja Fast-Food -->
+  <rect x="12" y="70" width="96" height="12" rx="4" fill="url(#trayGrad)" />
+  <rect x="8" y="68" width="104" height="4" rx="2" fill="#FFE082" />
+  
+  <!-- Prato / Base -->
+  <ellipse cx="60" cy="70" rx="36" ry="8" fill="#EEEEEE" />
+  
+  <!-- Hambúrguer Servido -->
+  <path d="M 40 50 C 40 32 80 32 80 50 Z" fill="#FFA000" />
+  <polygon points="38,51 82,51 76,57 60,54 50,58 44,53" fill="#FFC107" />
+  <rect x="38" y="55" width="44" height="7" rx="3.5" fill="#4E342E" />
+  <path d="M 39 63 Q 50 67 60 63 Q 70 67 81 63" stroke="#4CAF50" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M 42 65 C 42 70 78 70 78 65 Z" fill="#FFA000" />
+  
+  <!-- Copo com Canudo -->
+  <path d="M 86 42 L 89 68 L 102 68 L 105 42 Z" fill="#D32F2F" />
+  <line x1="95" y1="42" x2="102" y2="28" stroke="#FFF" stroke-width="3" stroke-linecap="round" />
+  <line x1="102" y1="28" x2="110" y2="26" stroke="#D32F2F" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Talher Garfo e Faca decorativo -->
+  <path d="M 22 40 L 22 68" stroke="#BDBDBD" stroke-width="3" stroke-linecap="round" />
+  <path d="M 17 40 L 17 50 C 17 55 27 55 27 50 L 27 40" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round" />
+</svg>

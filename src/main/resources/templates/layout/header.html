@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- Fragmento do Cabeçalho do Totem -->
+    <header th:fragment="totem-header" class="totem-header">
+        <div class="brand-wrapper">
+            <img th:src="@{/img/logo.svg}" alt="Logo Antunes Lanches" class="brand-logo-img">
+            <div>
+                <h1 class="brand-title">ANTUNES <span>LANCHES</span></h1>
+                <p class="brand-tagline">Autoatendimento Touch &bull; Sabor Artesanal</p>
+            </div>
+        </div>
+
+        <div class="header-meta">
+            <span class="badge badge-gold" id="terminal-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Totem 01 Online
+            </span>
+            <div class="totem-clock" id="totem-clock">--:--</div>
+        </div>
+    </header>
+</body>
+</html>
