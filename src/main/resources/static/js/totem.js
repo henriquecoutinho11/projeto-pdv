@@ -21,6 +21,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const screenWelcome = document.getElementById('screen-welcome');
     const screenDining = document.getElementById('screen-dining');
     const screenMenu = document.getElementById('screen-menu');
+    const screenIdentification = document.getElementById('screen-identification');
+
+    // Barra Inferior Persistente do Carrinho
+    const floatingCartBar = document.getElementById('floating-cart-bar');
+    const floatingCartCount = document.getElementById('floating-cart-count');
+    const floatingCartSummary = document.getElementById('floating-cart-summary');
+    const floatingCartTotal = document.getElementById('floating-cart-total');
+    const btnToggleCartDrawer = document.getElementById('btn-toggle-cart-drawer');
+    const btnFloatingCheckout = document.getElementById('btn-floating-checkout');
+
+    // Drawer Expansível do Carrinho
+    const cartDrawerModal = document.getElementById('cart-drawer-modal');
+    const drawerItemCount = document.getElementById('drawer-item-count');
+    const btnClearCart = document.getElementById('btn-clear-cart');
+    const btnCloseCartDrawer = document.getElementById('btn-close-cart-drawer');
+    const cartEmptyState = document.getElementById('cart-empty-state');
+    const btnEmptyCartMenu = document.getElementById('btn-empty-cart-menu');
+    const cartItemsList = document.getElementById('cart-items-list');
+    const cartDrawerFooter = document.getElementById('cart-drawer-footer');
+    const drawerSubtotal = document.getElementById('drawer-subtotal');
+    const drawerDiscount = document.getElementById('drawer-discount');
+    const drawerTotalAmount = document.getElementById('drawer-total-amount');
+    const btnDrawerContinue = document.getElementById('btn-drawer-continue');
+    const btnDrawerCheckout = document.getElementById('btn-drawer-checkout');
+
+    // Tela de Identificação do Cliente
+    const idSummaryModalidade = document.getElementById('id-summary-modalidade');
+    const idSummaryItems = document.getElementById('id-summary-items');
+    const idSummaryTotal = document.getElementById('id-summary-total');
+    const cardFieldNome = document.getElementById('card-field-nome');
+    const cardFieldCpf = document.getElementById('card-field-cpf');
+    const touchDisplayNome = document.getElementById('touch-display-nome');
+    const touchDisplayCpf = document.getElementById('touch-display-cpf');
+    const nomeDisplayText = document.getElementById('nome-display-text');
+    const cpfDisplayText = document.getElementById('cpf-display-text');
+    const cursorNome = document.getElementById('cursor-nome');
+    const cursorCpf = document.getElementById('cursor-cpf');
+    const btnClearNome = document.getElementById('btn-clear-nome');
+    const btnClearCpf = document.getElementById('btn-clear-cpf');
+    const btnSkipCpf = document.getElementById('btn-skip-cpf');
+    const cpfFeedback = document.getElementById('cpf-feedback');
+    const btnIdBackMenu = document.getElementById('btn-id-back-menu');
+    const btnIdSkipAll = document.getElementById('btn-id-skip-all');
+    const btnIdAdvancePayment = document.getElementById('btn-id-advance-payment');
+
+    // Teclados Virtuais Touch
+    const keyboardSwitcherTitle = document.getElementById('keyboard-title');
+    const tabKbNome = document.getElementById('tab-kb-nome');
+    const tabKbCpf = document.getElementById('tab-kb-cpf');
+    const keyboardQwerty = document.getElementById('keyboard-qwerty');
+    const keyboardNumpad = document.getElementById('keyboard-numpad');
+    const btnKbNextCpf = document.getElementById('btn-kb-next-cpf');
     
     // Botões de Topo / Cabeçalho e Rodapé
     const btnStartOrder = document.getElementById('btn-start-order');
@@ -89,6 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------
     // 2. ESTADO GLOBAL DA APLICAÇÃO
     // --------------------------------------------------------------------------
+    function carregarCarrinhoDoStorage() {
+        try {
+            const salvo = sessionStorage.getItem('pdv_carrinho');
+            return salvo ? JSON.parse(salvo) : [];
+        } catch (e) {
+            console.warn('Erro ao carregar carrinho inicial do sessionStorage:', e);
+            return [];
+        }
+    }
+
     const STATE = {
         currentSlide: 0,
         carouselInterval: null,
@@ -98,10 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownInterval: null,
         remainingSeconds: 60,
         isActiveOrder: false,
+        currentScreen: 'welcome',
         tipoConsumo: sessionStorage.getItem('tipoConsumo') || 'COMER_AQUI',
         activeFilter: 'all',
         searchTerm: '',
         toastTimeout: null,
+        
+        // Carrinho de Compras & Identificação do Cliente (CARD-13)
+        carrinho: carregarCarrinhoDoStorage(),
+        nomeCliente: sessionStorage.getItem('pdv_nome_cliente') || '',
+        cpfCliente: sessionStorage.getItem('pdv_cpf_cliente') || '',
+        activeInputField: 'nome',
         
         // Produto atualmente em customização no modal
         customizingItem: {
@@ -202,10 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. MÁQUINA DE ESTADOS: NAVEGAÇÃO ENTRE TELAS DO TOTEM
     // --------------------------------------------------------------------------
     function transitionToScreen(screenName) {
+        STATE.currentScreen = screenName;
+
         // Esconder todas as telas
         screenWelcome.classList.add('hidden');
         screenDining.classList.add('hidden');
         screenMenu.classList.add('hidden');
+        if (screenIdentification) screenIdentification.classList.add('hidden');
 
         if (screenName === 'welcome') {
             screenWelcome.classList.remove('hidden');
@@ -213,18 +285,32 @@ document.addEventListener('DOMContentLoaded', () => {
             STATE.isActiveOrder = false;
             stopInactivityTimer();
             startCarousel();
+            if (floatingCartBar) floatingCartBar.classList.add('hidden');
+            fecharCartDrawer();
         } else if (screenName === 'dining') {
             stopCarousel();
             screenDining.classList.remove('hidden');
             btnRestart.style.display = 'inline-flex';
             STATE.isActiveOrder = true;
             resetInactivityTimer();
+            if (floatingCartBar) floatingCartBar.classList.add('hidden');
         } else if (screenName === 'menu') {
             stopCarousel();
             screenMenu.classList.remove('hidden');
             btnRestart.style.display = 'inline-flex';
             STATE.isActiveOrder = true;
             updateDiningLabelUI();
+            resetInactivityTimer();
+            atualizarCarrinhoUI();
+        } else if (screenName === 'identification') {
+            stopCarousel();
+            if (screenIdentification) screenIdentification.classList.remove('hidden');
+            btnRestart.style.display = 'inline-flex';
+            STATE.isActiveOrder = true;
+            if (floatingCartBar) floatingCartBar.classList.add('hidden');
+            fecharCartDrawer();
+            atualizarResumoIdentificacao();
+            selecionarCampoIdentificacao('nome');
             resetInactivityTimer();
         }
     }
@@ -784,31 +870,582 @@ document.addEventListener('DOMContentLoaded', () => {
             subtotal: item.subtotal
         };
 
-        // Salvar no carrinho da sessão (SessionStorage / LocalStorage)
-        salvarItemNoStorage(itemCompilado);
-
-        // Feedback sonoro/visual para o cliente
-        showToast('Item Adicionado! 🛒', `${item.nome} (${item.quantidade}x) incluído no carrinho.`);
-
-        // Fechar modal de customização
+        adicionarItemAoCarrinho(itemCompilado);
         closeCustomizationModal();
     }
 
-    function salvarItemNoStorage(novoItem) {
-        let carrinho = [];
-        try {
-            const salvo = sessionStorage.getItem('pdv_carrinho');
-            if (salvo) {
-                carrinho = JSON.parse(salvo);
-            }
-        } catch (err) {
-            console.warn('Erro ao ler carrinho do storage:', err);
-            carrinho = [];
+    // --------------------------------------------------------------------------
+    // 13.1 GESTÃO DO CARRINHO DE COMPRAS & DRAWER (CARD-13)
+    // --------------------------------------------------------------------------
+    function persistirCarrinho() {
+        sessionStorage.setItem('pdv_carrinho', JSON.stringify(STATE.carrinho));
+    }
+
+    function adicionarItemAoCarrinho(novoItem) {
+        STATE.carrinho.push(novoItem);
+        persistirCarrinho();
+        atualizarCarrinhoUI();
+        showToast('Item Adicionado! 🛒', `${novoItem.produtoNome} (${novoItem.quantidade}x) incluído na sua sacola.`);
+        console.log('Item adicionado ao carrinho:', novoItem);
+    }
+
+    function alterarQuantidadeItemCarrinho(idItemTemp, delta) {
+        const item = STATE.carrinho.find(i => String(i.idItemTemp) === String(idItemTemp));
+        if (!item) return;
+
+        item.quantidade += delta;
+        if (item.quantidade <= 0) {
+            removerItemCarrinho(idItemTemp);
+            return;
         }
 
-        carrinho.push(novoItem);
-        sessionStorage.setItem('pdv_carrinho', JSON.stringify(carrinho));
-        console.log('Objeto JSON compilado para o carrinho:', novoItem);
+        item.subtotal = item.precoUnitario * item.quantidade;
+        persistirCarrinho();
+        atualizarCarrinhoUI();
+    }
+
+    function removerItemCarrinho(idItemTemp) {
+        STATE.carrinho = STATE.carrinho.filter(i => String(i.idItemTemp) !== String(idItemTemp));
+        persistirCarrinho();
+        atualizarCarrinhoUI();
+        showToast('Item Removido 🗑️', 'O item foi retirado da sua sacola.');
+    }
+
+    function limparCarrinho() {
+        STATE.carrinho = [];
+        persistirCarrinho();
+        atualizarCarrinhoUI();
+        showToast('Sacola Vazia 🧹', 'Todos os itens foram removidos do carrinho.');
+    }
+
+    function abrirCartDrawer() {
+        if (cartDrawerModal) {
+            cartDrawerModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            atualizarCarrinhoUI();
+        }
+    }
+
+    function fecharCartDrawer() {
+        if (cartDrawerModal) {
+            cartDrawerModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function atualizarCarrinhoUI() {
+        let totalQtd = 0;
+        let totalValor = 0.00;
+
+        STATE.carrinho.forEach(item => {
+            totalQtd += item.quantidade;
+            totalValor += item.subtotal;
+        });
+
+        // 1. Atualizar Barra Flutuante
+        if (floatingCartCount) floatingCartCount.textContent = totalQtd;
+        if (floatingCartSummary) {
+            floatingCartSummary.textContent = totalQtd === 1 ? '1 item selecionado' : `${totalQtd} itens selecionados`;
+        }
+        if (floatingCartTotal) floatingCartTotal.textContent = formatarMoeda(totalValor);
+
+        if (floatingCartBar) {
+            const isMenuScreen = (STATE.currentScreen === 'menu');
+            if (totalQtd > 0 && isMenuScreen) {
+                floatingCartBar.classList.remove('hidden');
+            } else {
+                floatingCartBar.classList.add('hidden');
+            }
+        }
+
+        // 2. Atualizar Drawer
+        if (drawerItemCount) drawerItemCount.textContent = totalQtd;
+        if (drawerSubtotal) drawerSubtotal.textContent = 'R$ ' + formatarMoeda(totalValor);
+        if (drawerDiscount) drawerDiscount.textContent = 'R$ 0,00';
+        if (drawerTotalAmount) drawerTotalAmount.textContent = formatarMoeda(totalValor);
+
+        if (totalQtd === 0) {
+            if (cartEmptyState) cartEmptyState.classList.remove('hidden');
+            if (cartItemsList) {
+                cartItemsList.classList.add('hidden');
+                cartItemsList.innerHTML = '';
+            }
+            if (cartDrawerFooter) cartDrawerFooter.classList.add('hidden');
+        } else {
+            if (cartEmptyState) cartEmptyState.classList.add('hidden');
+            if (cartItemsList) {
+                cartItemsList.classList.remove('hidden');
+                renderizarItensDrawer(cartItemsList);
+            }
+            if (cartDrawerFooter) cartDrawerFooter.classList.remove('hidden');
+        }
+    }
+
+    function renderizarItensDrawer(container) {
+        container.innerHTML = '';
+
+        STATE.carrinho.forEach(item => {
+            const card = document.createElement('article');
+            card.className = 'cart-item-card';
+
+            // Montar tags de personalização
+            let tagsHtml = '';
+            if (item.tamanhoBatataNome || item.bebidaNome) {
+                const batata = item.tamanhoBatataNome ? `🍟 ${item.tamanhoBatataNome}` : '';
+                const bebida = item.bebidaNome ? `🥤 ${item.bebidaNome}` : '';
+                const comboInfo = [batata, bebida].filter(Boolean).join(' + ');
+                if (comboInfo) {
+                    tagsHtml += `<span class="cart-tag tag-combo">${comboInfo}</span>`;
+                }
+            }
+
+            if (item.adicionaisNomes && item.adicionaisNomes.length > 0) {
+                item.adicionaisNomes.forEach(add => {
+                    tagsHtml += `<span class="cart-tag tag-adicional">+ ${add}</span>`;
+                });
+            }
+
+            if (item.remocoes && item.remocoes.length > 0) {
+                item.remocoes.forEach(rem => {
+                    tagsHtml += `<span class="cart-tag tag-remocao">Sem ${rem}</span>`;
+                });
+            }
+
+            if (item.observacoes) {
+                tagsHtml += `<span class="cart-tag tag-obs">Obs: "${item.observacoes}"</span>`;
+            }
+
+            const imgFallback = item.imagemUrl || '/img/burger-hero.svg';
+
+            card.innerHTML = `
+                <div class="cart-item-media">
+                    <img src="${imgFallback}" alt="${item.produtoNome}" class="cart-item-art" onerror="this.src='/img/burger-hero.svg'">
+                </div>
+                <div class="cart-item-details">
+                    <div class="cart-item-head">
+                        <h4 class="cart-item-name">${item.produtoNome}</h4>
+                        <span class="cart-item-unit-price">R$ ${formatarMoeda(item.precoUnitario)} un</span>
+                    </div>
+                    ${tagsHtml ? `<div class="cart-item-tags">${tagsHtml}</div>` : ''}
+                    <div class="cart-item-bottom">
+                        <div class="cart-stepper" role="group" aria-label="Quantidade">
+                            <button type="button" class="btn-cart-stepper btn-minus" data-id="${item.idItemTemp}" aria-label="Diminuir">−</button>
+                            <span class="cart-stepper-val">${item.quantidade}</span>
+                            <button type="button" class="btn-cart-stepper btn-plus" data-id="${item.idItemTemp}" aria-label="Aumentar">+</button>
+                        </div>
+                        <div class="cart-item-subtotal-box">
+                            <span class="currency">R$</span>
+                            <span class="amount">${formatarMoeda(item.subtotal)}</span>
+                        </div>
+                        <button type="button" class="btn-remove-item" data-id="${item.idItemTemp}" title="Remover item da sacola" aria-label="Remover ${item.produtoNome}">🗑️</button>
+                    </div>
+                </div>
+            `;
+
+            // Eventos nos botões do card
+            card.querySelector('.btn-minus')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alterarQuantidadeItemCarrinho(item.idItemTemp, -1);
+            });
+
+            card.querySelector('.btn-plus')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alterarQuantidadeItemCarrinho(item.idItemTemp, 1);
+            });
+
+            card.querySelector('.btn-remove-item')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removerItemCarrinho(item.idItemTemp);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    // Ouvintes dos botões do carrinho
+    if (btnToggleCartDrawer) {
+        btnToggleCartDrawer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            abrirCartDrawer();
+        });
+    }
+
+    if (btnCloseCartDrawer) {
+        btnCloseCartDrawer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fecharCartDrawer();
+        });
+    }
+
+    if (btnDrawerContinue) {
+        btnDrawerContinue.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fecharCartDrawer();
+        });
+    }
+
+    if (btnEmptyCartMenu) {
+        btnEmptyCartMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fecharCartDrawer();
+            transitionToScreen('menu');
+        });
+    }
+
+    if (btnClearCart) {
+        btnClearCart.addEventListener('click', (e) => {
+            e.stopPropagation();
+            limparCarrinho();
+        });
+    }
+
+    // Avançar para a Identificação a partir do Carrinho
+    function irParaIdentificacao() {
+        if (!STATE.carrinho || STATE.carrinho.length === 0) {
+            showToast('Sacola Vazia ⚠️', 'Adicione itens ao seu pedido antes de finalizar.');
+            return;
+        }
+        fecharCartDrawer();
+        transitionToScreen('identification');
+    }
+
+    if (btnFloatingCheckout) {
+        btnFloatingCheckout.addEventListener('click', (e) => {
+            e.stopPropagation();
+            irParaIdentificacao();
+        });
+    }
+
+    if (btnDrawerCheckout) {
+        btnDrawerCheckout.addEventListener('click', (e) => {
+            e.stopPropagation();
+            irParaIdentificacao();
+        });
+    }
+
+    // --------------------------------------------------------------------------
+    // 13.2 IDENTIFICAÇÃO DO CLIENTE & TECLADOS VIRTUAIS TOUCH (CARD-13)
+    // --------------------------------------------------------------------------
+    function atualizarResumoIdentificacao() {
+        let totalQtd = 0;
+        let totalValor = 0.00;
+
+        STATE.carrinho.forEach(item => {
+            totalQtd += item.quantidade;
+            totalValor += item.subtotal;
+        });
+
+        if (idSummaryModalidade) {
+            idSummaryModalidade.textContent = (STATE.tipoConsumo === 'PARA_VIAGEM') ? 'Para Viagem 🛍️' : 'Para Comer Aqui 🍽️';
+        }
+        if (idSummaryItems) {
+            idSummaryItems.textContent = totalQtd === 1 ? '1 item' : `${totalQtd} itens`;
+        }
+        if (idSummaryTotal) {
+            idSummaryTotal.textContent = 'R$ ' + formatarMoeda(totalValor);
+        }
+    }
+
+    function selecionarCampoIdentificacao(campo) {
+        STATE.activeInputField = campo;
+
+        const isNome = (campo === 'nome');
+        if (cardFieldNome) cardFieldNome.classList.toggle('active', isNome);
+        if (cardFieldCpf) cardFieldCpf.classList.toggle('active', !isNome);
+
+        if (cursorNome) cursorNome.classList.toggle('hidden', !isNome);
+        if (cursorCpf) cursorCpf.classList.toggle('hidden', isNome);
+
+        // Alternar teclado virtual
+        if (isNome) {
+            if (keyboardQwerty) keyboardQwerty.classList.remove('hidden');
+            if (keyboardNumpad) keyboardNumpad.classList.add('hidden');
+            if (tabKbNome) tabKbNome.classList.add('active');
+            if (tabKbCpf) tabKbCpf.classList.remove('active');
+            if (keyboardSwitcherTitle) keyboardSwitcherTitle.textContent = 'Teclado Virtual Touch: Nome';
+        } else {
+            if (keyboardQwerty) keyboardQwerty.classList.add('hidden');
+            if (keyboardNumpad) keyboardNumpad.classList.remove('hidden');
+            if (tabKbNome) tabKbNome.classList.remove('active');
+            if (tabKbCpf) tabKbCpf.classList.add('active');
+            if (keyboardSwitcherTitle) keyboardSwitcherTitle.textContent = 'Teclado Virtual Numérico: CPF na Nota';
+        }
+    }
+
+    function formatarCpf(digitos) {
+        if (!digitos) return '';
+        const limpo = digitos.replace(/\D/g, '').slice(0, 11);
+        let formatado = '';
+        for (let i = 0; i < limpo.length; i++) {
+            if (i === 3 || i === 6) formatado += '.';
+            if (i === 9) formatado += '-';
+            formatado += limpo[i];
+        }
+        return formatado;
+    }
+
+    function validarAlgoritmoCpf(cpfString) {
+        if (!cpfString) return true; // Vazio é opcional
+        const limpo = cpfString.replace(/\D/g, '');
+        if (limpo.length !== 11) return false;
+        if (/^(\d)\1{10}$/.test(limpo)) return false;
+
+        let soma = 0;
+        for (let i = 0; i < 9; i++) {
+            soma += parseInt(limpo.charAt(i), 10) * (10 - i);
+        }
+        let d1 = 11 - (soma % 11);
+        if (d1 >= 10) d1 = 0;
+        if (d1 !== parseInt(limpo.charAt(9), 10)) return false;
+
+        soma = 0;
+        for (let i = 0; i < 10; i++) {
+            soma += parseInt(limpo.charAt(i), 10) * (11 - i);
+        }
+        let d2 = 11 - (soma % 11);
+        if (d2 >= 10) d2 = 0;
+        return d2 === parseInt(limpo.charAt(10), 10);
+    }
+
+    function atualizarDisplaysIdentificacao() {
+        // 1. Display Nome
+        if (nomeDisplayText) {
+            if (STATE.nomeCliente && STATE.nomeCliente.trim().length > 0) {
+                nomeDisplayText.textContent = STATE.nomeCliente;
+                nomeDisplayText.classList.remove('placeholder');
+                if (btnClearNome) btnClearNome.classList.remove('hidden');
+            } else {
+                nomeDisplayText.textContent = 'Toque para digitar seu nome...';
+                nomeDisplayText.classList.add('placeholder');
+                if (btnClearNome) btnClearNome.classList.add('hidden');
+            }
+        }
+
+        // 2. Display CPF
+        const rawCpf = (STATE.cpfCliente || '').replace(/\D/g, '');
+        const formatado = formatarCpf(rawCpf);
+
+        if (cpfDisplayText) {
+            if (formatado && formatado.length > 0) {
+                cpfDisplayText.textContent = formatado;
+                cpfDisplayText.classList.remove('placeholder');
+                if (btnClearCpf) btnClearCpf.classList.remove('hidden');
+            } else {
+                cpfDisplayText.textContent = '___.___.___-__';
+                cpfDisplayText.classList.add('placeholder');
+                if (btnClearCpf) btnClearCpf.classList.add('hidden');
+            }
+        }
+
+        // Feedback de validação do CPF
+        if (cpfFeedback) {
+            if (!rawCpf || rawCpf.length === 0) {
+                cpfFeedback.textContent = '';
+                cpfFeedback.className = 'cpf-validation-feedback';
+            } else if (rawCpf.length < 11) {
+                cpfFeedback.textContent = `Faltam ${11 - rawCpf.length} dígito(s)...`;
+                cpfFeedback.className = 'cpf-validation-feedback';
+            } else {
+                const valido = validarAlgoritmoCpf(rawCpf);
+                if (valido) {
+                    cpfFeedback.textContent = 'CPF Válido ✅';
+                    cpfFeedback.className = 'cpf-validation-feedback valid';
+                } else {
+                    cpfFeedback.textContent = 'CPF Inválido ⚠️';
+                    cpfFeedback.className = 'cpf-validation-feedback invalid';
+                }
+            }
+        }
+    }
+
+    function digitarNoTeclado(caractere) {
+        if (STATE.activeInputField === 'nome') {
+            if (STATE.nomeCliente.length < 40) {
+                STATE.nomeCliente += caractere;
+                sessionStorage.setItem('pdv_nome_cliente', STATE.nomeCliente);
+                atualizarDisplaysIdentificacao();
+            }
+        } else if (STATE.activeInputField === 'cpf') {
+            const rawCpf = STATE.cpfCliente.replace(/\D/g, '');
+            if (/\d/.test(caractere) && rawCpf.length < 11) {
+                STATE.cpfCliente = formatarCpf(rawCpf + caractere);
+                sessionStorage.setItem('pdv_cpf_cliente', STATE.cpfCliente);
+                atualizarDisplaysIdentificacao();
+            }
+        }
+    }
+
+    function apagarNoTeclado() {
+        if (STATE.activeInputField === 'nome') {
+            if (STATE.nomeCliente.length > 0) {
+                STATE.nomeCliente = STATE.nomeCliente.slice(0, -1);
+                sessionStorage.setItem('pdv_nome_cliente', STATE.nomeCliente);
+                atualizarDisplaysIdentificacao();
+            }
+        } else if (STATE.activeInputField === 'cpf') {
+            const rawCpf = STATE.cpfCliente.replace(/\D/g, '');
+            if (rawCpf.length > 0) {
+                STATE.cpfCliente = formatarCpf(rawCpf.slice(0, -1));
+                sessionStorage.setItem('pdv_cpf_cliente', STATE.cpfCliente);
+                atualizarDisplaysIdentificacao();
+            }
+        }
+    }
+
+    function limparCampoAtivo() {
+        if (STATE.activeInputField === 'nome') {
+            STATE.nomeCliente = '';
+            sessionStorage.removeItem('pdv_nome_cliente');
+        } else if (STATE.activeInputField === 'cpf') {
+            STATE.cpfCliente = '';
+            sessionStorage.removeItem('pdv_cpf_cliente');
+        }
+        atualizarDisplaysIdentificacao();
+    }
+
+    function pularCpf() {
+        STATE.cpfCliente = '';
+        sessionStorage.removeItem('pdv_cpf_cliente');
+        atualizarDisplaysIdentificacao();
+        showToast('CPF Ignorado ⚡', 'Nenhum CPF será registrado na nota fiscal.');
+    }
+
+    // Ouvintes de cliques nos campos e teclados touch
+    cardFieldNome?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('nome');
+    });
+
+    touchDisplayNome?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('nome');
+    });
+
+    cardFieldCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('cpf');
+    });
+
+    touchDisplayCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('cpf');
+    });
+
+    tabKbNome?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('nome');
+    });
+
+    tabKbCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('cpf');
+    });
+
+    btnKbNextCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selecionarCampoIdentificacao('cpf');
+    });
+
+    btnClearNome?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        STATE.nomeCliente = '';
+        sessionStorage.removeItem('pdv_nome_cliente');
+        atualizarDisplaysIdentificacao();
+    });
+
+    btnClearCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        STATE.cpfCliente = '';
+        sessionStorage.removeItem('pdv_cpf_cliente');
+        atualizarDisplaysIdentificacao();
+    });
+
+    btnSkipCpf?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pularCpf();
+    });
+
+    // Teclas do Teclado QWERTY
+    keyboardQwerty?.querySelectorAll('.key-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const key = btn.getAttribute('data-key');
+            const action = btn.getAttribute('data-action');
+
+            if (key) {
+                digitarNoTeclado(key);
+            } else if (action === 'backspace') {
+                apagarNoTeclado();
+            } else if (action === 'clear') {
+                limparCampoAtivo();
+            }
+        });
+    });
+
+    // Teclas do Teclado Numérico (Numpad)
+    keyboardNumpad?.querySelectorAll('.num-key-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const num = btn.getAttribute('data-num');
+            const action = btn.getAttribute('data-action');
+
+            if (num) {
+                digitarNoTeclado(num);
+            } else if (action === 'num-backspace') {
+                apagarNoTeclado();
+            } else if (action === 'num-clear') {
+                limparCampoAtivo();
+            }
+        });
+    });
+
+    // Botões de Ação da Tela de Identificação
+    btnIdBackMenu?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        transitionToScreen('menu');
+    });
+
+    btnIdSkipAll?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        STATE.nomeCliente = '';
+        STATE.cpfCliente = '';
+        sessionStorage.removeItem('pdv_nome_cliente');
+        sessionStorage.removeItem('pdv_cpf_cliente');
+        avancarParaPagamento();
+    });
+
+    btnIdAdvancePayment?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rawCpf = (STATE.cpfCliente || '').replace(/\D/g, '');
+        if (rawCpf.length > 0) {
+            if (rawCpf.length < 11 || !validarAlgoritmoCpf(rawCpf)) {
+                showToast('CPF Inválido ⚠️', 'Por favor, digite um CPF válido ou clique em "Não desejo informar CPF".');
+                selecionarCampoIdentificacao('cpf');
+                return;
+            }
+        }
+        avancarParaPagamento();
+    });
+
+    function avancarParaPagamento() {
+        const payload = {
+            nomeCliente: STATE.nomeCliente.trim() || null,
+            cpfCliente: STATE.cpfCliente ? formatarCpf(STATE.cpfCliente) : null
+        };
+
+        // Salvar na sessão do backend
+        fetch('/totem/identificacao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.warn('Erro ao registrar identificação no servidor:', err));
+
+        const identificacaoMsg = payload.nomeCliente 
+            ? `Identificação salva: ${payload.nomeCliente}!` 
+            : 'Avançando com cliente não identificado!';
+
+        showToast('Identificação Concluída! ✅', `${identificacaoMsg} Redirecionando para o Pagamento...`);
+        console.log('Dados do cliente para o pedido:', payload);
     }
 
     function showToast(title, message) {
@@ -907,15 +1544,25 @@ document.addEventListener('DOMContentLoaded', () => {
         stopInactivityTimer();
         closeHelpModal();
         closeCustomizationModal();
+        fecharCartDrawer();
 
         sessionStorage.removeItem('tipoConsumo');
         sessionStorage.removeItem('pdv_carrinho');
+        sessionStorage.removeItem('pdv_nome_cliente');
+        sessionStorage.removeItem('pdv_cpf_cliente');
 
         diningCards.forEach(c => c.classList.remove('selected'));
         if (diningFeedback) diningFeedback.classList.add('hidden');
         if (searchInput) searchInput.value = '';
         STATE.searchTerm = '';
         STATE.activeFilter = 'all';
+        STATE.carrinho = [];
+        STATE.nomeCliente = '';
+        STATE.cpfCliente = '';
+        STATE.activeInputField = 'nome';
+
+        atualizarCarrinhoUI();
+        atualizarDisplaysIdentificacao();
 
         transitionToScreen('welcome');
 
@@ -969,4 +1616,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2500);
         });
     }
+
+    // Inicialização da UI do Carrinho e Identificação
+    atualizarCarrinhoUI();
+    atualizarDisplaysIdentificacao();
 });

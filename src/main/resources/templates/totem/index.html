@@ -537,7 +537,285 @@
             </div>
         </section>
 
+        <!-- ====================================================================
+             3. TELA DE IDENTIFICAÇÃO DO CLIENTE (Customer Identification Screen)
+             ==================================================================== -->
+        <section id="screen-identification" class="identification-screen hidden" aria-label="Identificação do Cliente">
+            <div class="identification-header">
+                <span class="badge badge-gold" style="margin-bottom: var(--spacing-sm);">Passo 3 de 4</span>
+                <h2 class="dining-title">Como podemos te chamar?</h2>
+                <p class="dining-subtitle">Informe seu nome para retirada no balcão e seu CPF para nota fiscal. Esta etapa é rápida e 100% opcional!</p>
+            </div>
+
+            <!-- Barra compacta de resumo do pedido -->
+            <div class="order-quick-summary-bar">
+                <div class="summary-pill">
+                    <span class="pill-label">Modalidade:</span>
+                    <strong id="id-summary-modalidade">Para Comer Aqui</strong>
+                </div>
+                <div class="summary-pill">
+                    <span class="pill-label">Itens no Pedido:</span>
+                    <strong id="id-summary-items">0 itens</strong>
+                </div>
+                <div class="summary-pill">
+                    <span class="pill-label">Total a Pagar:</span>
+                    <strong class="text-gold" id="id-summary-total">R$ 0,00</strong>
+                </div>
+            </div>
+
+            <!-- Grid de Conteúdo Touch da Identificação -->
+            <div class="identification-content-grid">
+                <!-- Coluna Esquerda: Displays de Entrada Touch -->
+                <div class="touch-inputs-column">
+                    
+                    <!-- Campo 1: Nome do Cliente -->
+                    <div class="touch-field-card active" id="card-field-nome" data-field="nome">
+                        <div class="field-card-header">
+                            <label class="field-label" for="touch-display-nome">
+                                <span class="field-icon">👤</span>
+                                <span>Seu Nome (para chamar na senha)</span>
+                            </label>
+                            <span class="field-badge">Opcional</span>
+                        </div>
+                        <div class="touch-display-input" id="touch-display-nome" tabindex="0" role="textbox" aria-label="Toque para digitar seu nome">
+                            <span class="display-text placeholder" id="nome-display-text">Toque para digitar seu nome...</span>
+                            <span class="display-cursor" id="cursor-nome"></span>
+                            <button type="button" class="btn-clear-field hidden" id="btn-clear-nome" aria-label="Limpar nome">✕</button>
+                        </div>
+                        <p class="field-hint">Como seu nome aparecerá no painel de senhas e na comanda.</p>
+                    </div>
+
+                    <!-- Campo 2: CPF na Nota -->
+                    <div class="touch-field-card" id="card-field-cpf" data-field="cpf">
+                        <div class="field-card-header">
+                            <label class="field-label" for="touch-display-cpf">
+                                <span class="field-icon">📄</span>
+                                <span>CPF na Nota Fiscal</span>
+                            </label>
+                            <span class="field-badge">Opcional</span>
+                        </div>
+                        <div class="touch-display-input" id="touch-display-cpf" tabindex="0" role="textbox" aria-label="Toque para digitar seu CPF">
+                            <span class="display-text placeholder" id="cpf-display-text">___.___.___-__</span>
+                            <span class="display-cursor hidden" id="cursor-cpf"></span>
+                            <button type="button" class="btn-clear-field hidden" id="btn-clear-cpf" aria-label="Limpar CPF">✕</button>
+                        </div>
+
+                        <div class="cpf-actions-row">
+                            <!-- Atalho destacado para pular CPF -->
+                            <button type="button" class="btn-skip-cpf" id="btn-skip-cpf">
+                                <span class="skip-icon">⚡</span>
+                                <span>Não desejo informar CPF</span>
+                            </button>
+                            <!-- Status / Validação do CPF -->
+                            <div class="cpf-validation-feedback" id="cpf-feedback"></div>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação no Rodapé da Tela de Identificação -->
+                    <div class="identification-actions-row">
+                        <button type="button" class="btn btn-outline" id="btn-id-back-menu">
+                            <span class="btn-arrow-back">⬅</span>
+                            <span>Voltar ao Cardápio</span>
+                        </button>
+
+                        <button type="button" class="btn btn-outline" id="btn-id-skip-all">
+                            <span>Não Quero Me Identificar</span>
+                        </button>
+
+                        <button type="button" class="btn btn-gold btn-advance-payment animate-pulse-glow" id="btn-id-advance-payment">
+                            <span>Avançar para Pagamento</span>
+                            <span class="btn-arrow">➔</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Teclados Virtuais Touch -->
+                <div class="touch-keyboards-column">
+                    <!-- Alternador de Teclados Touch -->
+                    <div class="keyboard-switcher-bar">
+                        <span class="keyboard-title" id="keyboard-title">Teclado Virtual Touch: Nome</span>
+                        <div class="keyboard-tabs">
+                            <button type="button" class="keyboard-tab-btn active" id="tab-kb-nome" data-target="nome">Teclado QWERTY</button>
+                            <button type="button" class="keyboard-tab-btn" id="tab-kb-cpf" data-target="cpf">Teclado Numérico</button>
+                        </div>
+                    </div>
+
+                    <!-- 1. Teclado Virtual QWERTY Touch (Para Nome) -->
+                    <div class="virtual-keyboard virtual-keyboard-qwerty" id="keyboard-qwerty">
+                        <!-- Linha 1 -->
+                        <div class="keyboard-row">
+                            <button type="button" class="key-btn" data-key="Q">Q</button>
+                            <button type="button" class="key-btn" data-key="W">W</button>
+                            <button type="button" class="key-btn" data-key="E">E</button>
+                            <button type="button" class="key-btn" data-key="R">R</button>
+                            <button type="button" class="key-btn" data-key="T">T</button>
+                            <button type="button" class="key-btn" data-key="Y">Y</button>
+                            <button type="button" class="key-btn" data-key="U">U</button>
+                            <button type="button" class="key-btn" data-key="I">I</button>
+                            <button type="button" class="key-btn" data-key="O">O</button>
+                            <button type="button" class="key-btn" data-key="P">P</button>
+                        </div>
+                        <!-- Linha 2 -->
+                        <div class="keyboard-row">
+                            <button type="button" class="key-btn" data-key="A">A</button>
+                            <button type="button" class="key-btn" data-key="S">S</button>
+                            <button type="button" class="key-btn" data-key="D">D</button>
+                            <button type="button" class="key-btn" data-key="F">F</button>
+                            <button type="button" class="key-btn" data-key="G">G</button>
+                            <button type="button" class="key-btn" data-key="H">H</button>
+                            <button type="button" class="key-btn" data-key="J">J</button>
+                            <button type="button" class="key-btn" data-key="K">K</button>
+                            <button type="button" class="key-btn" data-key="L">L</button>
+                            <button type="button" class="key-btn" data-key="Ç">Ç</button>
+                        </div>
+                        <!-- Linha 3 -->
+                        <div class="keyboard-row">
+                            <button type="button" class="key-btn" data-key="Z">Z</button>
+                            <button type="button" class="key-btn" data-key="X">X</button>
+                            <button type="button" class="key-btn" data-key="C">C</button>
+                            <button type="button" class="key-btn" data-key="V">V</button>
+                            <button type="button" class="key-btn" data-key="B">B</button>
+                            <button type="button" class="key-btn" data-key="N">N</button>
+                            <button type="button" class="key-btn" data-key="M">M</button>
+                            <button type="button" class="key-btn key-action key-backspace" data-action="backspace" aria-label="Apagar letra">⌫ Apagar</button>
+                        </div>
+                        <!-- Linha 4 -->
+                        <div class="keyboard-row">
+                            <button type="button" class="key-btn key-action" data-action="clear">Limpar</button>
+                            <button type="button" class="key-btn key-space" data-key=" ">Espaço</button>
+                            <button type="button" class="key-btn key-action key-next" id="btn-kb-next-cpf" data-action="next">Próximo: CPF ⬇️</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Teclado Virtual Numérico Grande (Estilo Discador / ATM) -->
+                    <div class="virtual-keyboard virtual-keyboard-numpad hidden" id="keyboard-numpad">
+                        <div class="numpad-grid">
+                            <button type="button" class="num-key-btn" data-num="1">1</button>
+                            <button type="button" class="num-key-btn" data-num="2">2</button>
+                            <button type="button" class="num-key-btn" data-num="3">3</button>
+                            <button type="button" class="num-key-btn" data-num="4">4</button>
+                            <button type="button" class="num-key-btn" data-num="5">5</button>
+                            <button type="button" class="num-key-btn" data-num="6">6</button>
+                            <button type="button" class="num-key-btn" data-num="7">7</button>
+                            <button type="button" class="num-key-btn" data-num="8">8</button>
+                            <button type="button" class="num-key-btn" data-num="9">9</button>
+                            <button type="button" class="num-key-btn num-key-action" data-action="num-clear">Limpar</button>
+                            <button type="button" class="num-key-btn" data-num="0">0</button>
+                            <button type="button" class="num-key-btn num-key-action num-key-backspace" data-action="num-backspace" aria-label="Apagar número">⌫ Apagar</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
     </main>
+
+    <!-- ====================================================================
+         BARRA INFERIOR PERSISTENTE DO CARRINHO (Floating Cart Bar)
+         ==================================================================== -->
+    <aside id="floating-cart-bar" class="floating-cart-bar hidden" role="region" aria-label="Resumo do Carrinho de Compras">
+        <div class="cart-bar-content">
+            <button type="button" class="cart-bar-info-btn" id="btn-toggle-cart-drawer" aria-label="Ver detalhes da sacola de compras">
+                <div class="cart-badge-icon-box">
+                    <span class="cart-icon">🛒</span>
+                    <span class="cart-counter-badge" id="floating-cart-count">0</span>
+                </div>
+                <div class="cart-bar-text">
+                    <span class="cart-bar-label">Sua Sacola</span>
+                    <span class="cart-bar-summary" id="floating-cart-summary">0 itens adicionados</span>
+                </div>
+            </button>
+
+            <div class="cart-bar-actions">
+                <div class="cart-bar-total-box">
+                    <span class="cart-total-label">Total:</span>
+                    <div class="cart-total-value">
+                        <span class="currency">R$</span>
+                        <span class="amount" id="floating-cart-total">0,00</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-gold btn-cart-checkout animate-pulse-glow" id="btn-floating-checkout">
+                    <span>Finalizar Pedido</span>
+                    <span class="btn-arrow">➔</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ====================================================================
+         DRAWER EXPANSÍVEL DO CARRINHO (Cart Drawer Modal)
+         ==================================================================== -->
+    <div id="cart-drawer-modal" class="modal-overlay cart-drawer-overlay" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
+        <div class="cart-drawer-container">
+            <!-- Cabeçalho do Drawer -->
+            <header class="cart-drawer-header">
+                <div class="drawer-header-title-box">
+                    <span class="drawer-header-icon">🛒</span>
+                    <div>
+                        <h3 class="cart-drawer-title" id="cart-drawer-title">Seu Pedido</h3>
+                        <p class="cart-drawer-subtitle"><span id="drawer-item-count">0</span> item(ns) na sacola</p>
+                    </div>
+                </div>
+
+                <div class="drawer-header-actions">
+                    <button type="button" class="btn-clear-cart" id="btn-clear-cart" title="Esvaziar carrinho de compras">
+                        <span class="trash-icon">🗑️</span>
+                        <span>Limpar Sacola</span>
+                    </button>
+                    <button type="button" class="btn-close-modal" id="btn-close-cart-drawer" aria-label="Fechar sacola e voltar ao cardápio">✕</button>
+                </div>
+            </header>
+
+            <!-- Corpo do Drawer: Lista de Itens ou Estado Vazio -->
+            <div class="cart-drawer-body">
+                <!-- Estado Vazio -->
+                <div id="cart-empty-state" class="cart-empty-state">
+                    <div class="empty-cart-icon">🛍️</div>
+                    <h4 class="empty-cart-title">Sua sacola está vazia</h4>
+                    <p class="empty-cart-desc">Você ainda não escolheu nenhum lanche delicioso. Explore nosso cardápio artesanal para montar seu pedido!</p>
+                    <button type="button" class="btn btn-gold" id="btn-empty-cart-menu">
+                        Explorar Cardápio
+                    </button>
+                </div>
+
+                <!-- Listagem Dinâmica dos Itens -->
+                <div id="cart-items-list" class="cart-items-list hidden"></div>
+            </div>
+
+            <!-- Rodapé do Drawer com Totais e Botões de Avanço -->
+            <footer class="cart-drawer-footer" id="cart-drawer-footer">
+                <div class="cart-financial-summary">
+                    <div class="summary-line">
+                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-val" id="drawer-subtotal">R$ 0,00</span>
+                    </div>
+                    <div class="summary-line summary-discount">
+                        <span class="summary-label">Descontos:</span>
+                        <span class="summary-val text-green" id="drawer-discount">R$ 0,00</span>
+                    </div>
+                    <div class="summary-line summary-total">
+                        <span class="summary-label">Total a Pagar:</span>
+                        <div class="total-price-display">
+                            <span class="currency">R$</span>
+                            <span class="amount" id="drawer-total-amount">0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cart-drawer-cta-row">
+                    <button type="button" class="btn btn-outline" id="btn-drawer-continue">
+                        Continuar Comprando
+                    </button>
+                    <button type="button" class="btn btn-gold btn-checkout-drawer animate-pulse-glow" id="btn-drawer-checkout">
+                        <span>Finalizar Pedido</span>
+                        <span class="btn-arrow">➔</span>
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
 
     <!-- Fragmento do Rodapé -->
     <div th:replace="~{layout/footer :: totem-footer}"></div>
