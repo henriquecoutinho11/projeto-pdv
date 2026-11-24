@@ -45,7 +45,6 @@ public class Produto implements Serializable {
     private Integer quantidadeEstoque;
 
     @Version
-    @Column(nullable = false)
     private Long version;
 
     @Column(name = "imagem_url", length = 255)

@@ -32,6 +32,7 @@ public class PedidoResponseDTO implements Serializable {
     private String codigoTransacao;
     private List<ItemPedidoResponseDTO> itens = new ArrayList<>();
     private Integer quantidadeItens;
+    private Long tempoEsperaMinutos;
 
     public PedidoResponseDTO() {
     }
@@ -78,6 +79,9 @@ public class PedidoResponseDTO implements Serializable {
         dto.setPago(pedido.isPago());
         dto.setDataHoraPagamento(pedido.getDataHoraPagamento());
         dto.setCodigoTransacao(pedido.getCodigoTransacao());
+        if (pedido.getDataHora() != null) {
+            dto.setTempoEsperaMinutos(Math.max(0L, java.time.Duration.between(pedido.getDataHora(), LocalDateTime.now()).toMinutes()));
+        }
         if (pedido.getNumeroSenha() != null) {
             dto.setSenhaFormatada(com.restaurante.pdv.model.service.SenhaSequencialService.formatarSenha(pedido.getNumeroSenha()));
         }
@@ -207,5 +211,16 @@ public class PedidoResponseDTO implements Serializable {
 
     public void setQuantidadeItens(Integer quantidadeItens) {
         this.quantidadeItens = quantidadeItens;
+    }
+
+    public Long getTempoEsperaMinutos() {
+        if (tempoEsperaMinutos == null && dataHora != null) {
+            return Math.max(0L, java.time.Duration.between(dataHora, LocalDateTime.now()).toMinutes());
+        }
+        return tempoEsperaMinutos;
+    }
+
+    public void setTempoEsperaMinutos(Long tempoEsperaMinutos) {
+        this.tempoEsperaMinutos = tempoEsperaMinutos;
     }
 }
