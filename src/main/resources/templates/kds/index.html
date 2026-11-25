@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antunes Lanches - Cozinha (KDS)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/kds.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/logo.svg}">
+</head>
+<body class="kds-body">
+
+    <!-- Cabeçalho Operacional KDS -->
+    <header class="kds-header">
+        <div class="kds-brand">
+            <img th:src="@{/img/logo.svg}" alt="Logo Antunes Lanches" class="kds-logo">
+            <div>
+                <h1 class="kds-title">ANTUNES <span>KDS</span></h1>
+                <p class="kds-subtitle">Painel Operacional da Cozinha</p>
+            </div>
+        </div>
+
+        <!-- Filtros e Contadores em Tempo Real -->
+        <nav class="kds-filters" aria-label="Filtros de Pedidos na Cozinha">
+            <button type="button" class="kds-filter-btn active" data-filter="ATIVOS">
+                Todos Ativos <span class="kds-count" id="count-ativos">0</span>
+            </button>
+            <button type="button" class="kds-filter-btn" data-filter="RECEBIDO">
+                Recebidos <span class="kds-count" id="count-recebidos">0</span>
+            </button>
+            <button type="button" class="kds-filter-btn" data-filter="EM_PREPARO">
+                Em Preparo <span class="kds-count" id="count-preparo">0</span>
+            </button>
+            <button type="button" class="kds-filter-btn" data-filter="PRONTO">
+                Prontos (Expedição) <span class="kds-count" id="count-prontos">0</span>
+            </button>
+        </nav>
+
+        <!-- Controles de Sincronização e Tela Cheia -->
+        <div class="kds-controls">
+            <div class="kds-status-pill" id="kds-sync-status" title="Sincronização automática a cada 3 segundos">
+                <span class="kds-dot"></span>
+                <span class="kds-sync-text">Ao Vivo</span>
+            </div>
+
+            <button type="button" class="kds-icon-btn" id="btn-kds-sound" title="Ativar/Desativar alerta sonoro de novos pedidos" aria-label="Alternar som">
+                <svg id="icon-sound-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg id="icon-sound-off" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            </button>
+
+            <button type="button" class="kds-icon-btn" id="btn-kds-refresh" title="Atualizar agora" aria-label="Atualizar pedidos">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </button>
+
+            <button type="button" class="kds-icon-btn" id="btn-kds-fullscreen" title="Modo Tela Cheia" aria-label="Tela cheia">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+            </button>
+
+            <div class="kds-clock" id="kds-clock">--:--</div>
+        </div>
+    </header>
+
+    <!-- Legenda de SLA -->
+    <div class="kds-sla-bar">
+        <div class="sla-legend">
+            <span class="sla-item"><span class="sla-dot sla-verde"></span> No prazo (&lt; 5 min)</span>
+            <span class="sla-item"><span class="sla-dot sla-amarelo"></span> Atenção (5–10 min)</span>
+            <span class="sla-item"><span class="sla-dot sla-vermelho"></span> Atrasado (&gt; 10 min)</span>
+        </div>
+        <div class="kds-links">
+            <a th:href="@{/painel-senhas}" target="_blank" class="kds-nav-link">Abrir Painel TV &nearr;</a>
+            <a th:href="@{/totem}" target="_blank" class="kds-nav-link">Abrir Totem &nearr;</a>
+        </div>
+    </div>
+
+    <!-- Área Principal de Pedidos -->
+    <main class="kds-main">
+        <div id="kds-grid" class="kds-grid" aria-live="polite">
+            <!-- Cards renderizados dinamicamente via kds.js -->
+        </div>
+
+        <div id="kds-empty" class="kds-empty hidden">
+            <div class="kds-empty-icon">🍔</div>
+            <h2>Nenhum pedido na fila</h2>
+            <p>Novos pedidos aparecerão automaticamente aqui assim que forem confirmados.</p>
+        </div>
+    </main>
+
+    <!-- Toast de Feedback -->
+    <div id="kds-toast" class="kds-toast hidden" role="status" aria-live="assertive"></div>
+
+    <script th:src="@{/js/kds.js}"></script>
+</body>
+</html>

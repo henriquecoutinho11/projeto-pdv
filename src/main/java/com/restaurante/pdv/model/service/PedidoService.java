@@ -252,11 +252,53 @@ public class PedidoService {
      *
      * @return lista de pedidos ativos com cálculo de tempo de espera, SLA e tags de customização.
      */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<PedidoKdsResponseDTO> listarPedidosAtivosKds() {
         return pedidoRepository.findByStatusInOrderByDataHoraAsc(List.of(StatusPedido.RECEBIDO, StatusPedido.EM_PREPARO))
                 .stream()
                 .map(PedidoKdsResponseDTO::deEntidade)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Lista pedidos prontos aguardando entrega/retirada no balcão.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<PedidoKdsResponseDTO> listarPedidosProntosKds() {
+        return pedidoRepository.findByStatusInOrderByDataHoraAsc(List.of(StatusPedido.PRONTO))
+                .stream()
+                .map(PedidoKdsResponseDTO::deEntidade)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lista senhas agrupadas para o Painel de TV do Salão:
+     * - emPreparo: pedidos com status RECEBIDO ou EM_PREPARO (mais antigos primeiro)
+     * - prontos: pedidos com status PRONTO (mais recentes primeiro para destaque de chamada)
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.Map<String, List<PedidoResponseDTO>> listarPainelSenhas() {
+        List<PedidoResponseDTO> emPreparo = pedidoRepository
+                .findByStatusInOrderByDataHoraAsc(List.of(StatusPedido.RECEBIDO, StatusPedido.EM_PREPARO))
+                .stream()
+                .map(PedidoResponseDTO::deEntidade)
+                .collect(Collectors.toList());
+
+        List<PedidoResponseDTO> prontos = pedidoRepository
+                .findByStatusInOrderByDataHoraAsc(List.of(StatusPedido.PRONTO))
+                .stream()
+                .sorted((a, b) -> {
+                    java.time.LocalDateTime t1 = b.getDataHora() != null ? b.getDataHora() : java.time.LocalDateTime.MIN;
+                    java.time.LocalDateTime t2 = a.getDataHora() != null ? a.getDataHora() : java.time.LocalDateTime.MIN;
+                    return t1.compareTo(t2);
+                })
+                .map(PedidoResponseDTO::deEntidade)
+                .collect(Collectors.toList());
+
+        java.util.Map<String, List<PedidoResponseDTO>> resultado = new java.util.HashMap<>();
+        resultado.put("emPreparo", emPreparo);
+        resultado.put("prontos", prontos);
+        return resultado;
     }
 
     /**
