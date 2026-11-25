@@ -589,6 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const basePrice = parseFloat(priceText) || 0.00;
         const imgSrc = productCard.querySelector('.product-art')?.getAttribute('src') || '/img/burger-hero.svg';
 
+        const isComboEligible = (categoryId === 1 || categoryId === 4);
+
         // Atualizar estado da customização
         STATE.customizingItem = {
             produtoId: productId,
@@ -603,11 +605,11 @@ document.addEventListener('DOMContentLoaded', () => {
             adicionaisNomes: [],
             remocoesIds: [],
             remocoesNomes: [],
-            tamanhoBatataId: 11, // Batata Média default
-            tamanhoBatataNome: 'Batata Média',
+            tamanhoBatataId: isComboEligible ? 11 : null, // Batata Média default apenas para lanches/combos
+            tamanhoBatataNome: isComboEligible ? 'Batata Média' : '',
             tamanhoBatataPreco: 0.00,
-            bebidaId: 13,        // Coca-Cola default
-            bebidaNome: 'Coca-Cola Lata 350ml',
+            bebidaId: isComboEligible ? 13 : null,        // Coca-Cola default apenas para lanches/combos
+            bebidaNome: isComboEligible ? 'Coca-Cola Lata 350ml' : '',
             bebidaPreco: 0.00,
             observacoes: '',
             precoUnitario: basePrice,
@@ -953,6 +955,10 @@ document.addEventListener('DOMContentLoaded', () => {
             cartDrawerModal.classList.remove('active');
             document.body.style.overflow = '';
         }
+    }
+
+    function calcularTotalCarrinho() {
+        return (STATE.carrinho || []).reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0);
     }
 
     function atualizarCarrinhoUI() {
@@ -1712,6 +1718,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Inicializa a tela de checkout: renderiza o resumo e cria o pedido no backend.
      */
     async function inicializarCheckout() {
+        CHECKOUT_STATE.pedidoId = null;
         renderizarResumoCheckout();
         await criarPedidoEIniciarPagamento();
     }
@@ -1729,9 +1736,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.className = 'checkout-item';
 
+            const nomeProduto = item.produtoNome || item.nome || 'Produto';
+            const remocoesLista = item.remocoes || item.remocoesNomes || [];
             const opcoes = [
                 ...(item.adicionaisNomes || []),
-                ...(item.remocoesNomes || []).map(r => `Sem ${r}`),
+                ...remocoesLista.map(r => `Sem ${r}`),
                 ...(item.tamanhoBatataNome ? [item.tamanhoBatataNome] : []),
                 ...(item.bebidaNome ? [item.bebidaNome] : [])
             ].join(', ');
@@ -1740,10 +1749,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="checkout-item-info">
                     <div>
                         <span class="checkout-item-qty">${item.quantidade}x</span>
-                        <span class="checkout-item-name">${item.nome}</span>
+                        <span class="checkout-item-name">${escapeHtmlTotem(nomeProduto)}</span>
                     </div>
-                    ${opcoes ? `<div class="checkout-item-opcoes">${opcoes}</div>` : ''}
-                    ${item.observacoes ? `<div class="checkout-item-opcoes">📝 ${item.observacoes}</div>` : ''}
+                    ${opcoes ? `<div class="checkout-item-opcoes">${escapeHtmlTotem(opcoes)}</div>` : ''}
+                    ${item.observacoes ? `<div class="checkout-item-opcoes">📝 ${escapeHtmlTotem(item.observacoes)}</div>` : ''}
                 </div>
                 <span class="checkout-item-subtotal">R$ ${formatarMoeda(item.subtotal)}</span>
             `;
@@ -2125,12 +2134,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ticketItemsList.innerHTML = '';
 
         STATE.carrinho.forEach(item => {
+            const nomeProduto = item.produtoNome || item.nome || 'Produto';
             const li = document.createElement('li');
             li.className = 'ticket-item';
             li.innerHTML = `
                 <span class="ticket-item-name">
                     <span class="ticket-item-qty">${item.quantidade}x</span>
-                    ${item.nome}
+                    ${escapeHtmlTotem(nomeProduto)}
                 </span>
                 <span class="ticket-item-price">R$ ${formatarMoeda(item.subtotal)}</span>
             `;
