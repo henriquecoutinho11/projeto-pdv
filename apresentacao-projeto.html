@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema PDV Web Core — Arquitetura, Padrões e Persistência</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --accent: #f59e0b;
+      --accent-soft: rgba(245, 158, 11, 0.14);
+      --blue: #38bdf8;
+      --blue-soft: rgba(56, 189, 248, 0.14);
+      --green: #34d399;
+      --green-soft: rgba(52, 211, 153, 0.14);
+      --purple: #a78bfa;
+      --purple-soft: rgba(167, 139, 250, 0.14);
+      --rose: #fb7185;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* Deck container */
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 44px 64px 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(32px);
+      transition: opacity 0.32s ease, transform 0.32s ease;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    /* Header of each slide */
+    .slide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .badge.blue {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .badge.green {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    .badge.purple {
+      background: var(--purple-soft);
+      color: var(--purple);
+      border-color: rgba(167, 139, 250, 0.35);
+    }
+
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-top: 6px;
+    }
+
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Cover Slide */
+    .cover-slide {
+      justify-content: center;
+      align-items: flex-start;
+      background: radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.14), transparent 45%),
+                  radial-gradient(circle at 15% 85%, rgba(56, 189, 248, 0.12), transparent 45%);
+    }
+
+    .cover-title {
+      font-size: 3.1rem;
+      font-weight: 900;
+      line-height: 1.12;
+      margin: 18px 0 14px;
+      max-width: 900px;
+    }
+
+    .cover-title span {
+      color: var(--accent);
+    }
+
+    .cover-desc {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+      align-items: start;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .card h3 {
+      font-size: 1.08rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p, .card li {
+      font-size: 0.93rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Code blocks */
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      background: rgba(148, 163, 184, 0.14);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.86em;
+      color: #fde68a;
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    .kw { color: #c084fc; font-weight: 600; }
+    .ann { color: #fbbf24; }
+    .str { color: #34d399; }
+    .typ { color: #38bdf8; }
+    .cmt { color: #64748b; font-style: italic; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Flow / Diagram boxes */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 14px 0 20px;
+    }
+
+    .flow-box {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .flow-box.highlight-amber { border-color: var(--accent); background: rgba(245, 158, 11, 0.08); }
+    .flow-box.highlight-blue { border-color: var(--blue); background: rgba(56, 189, 248, 0.08); }
+    .flow-box.highlight-green { border-color: var(--green); background: rgba(52, 211, 153, 0.08); }
+    .flow-box.highlight-purple { border-color: var(--purple); background: rgba(167, 139, 250, 0.08); }
+
+    .flow-arrow {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 0.76rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+      font-family: "Cascadia Code", Consolas, monospace;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border-left: 4px solid var(--accent);
+      background: rgba(245, 158, 11, 0.09);
+      font-size: 0.92rem;
+      color: #fde68a;
+    }
+
+    .callout.blue {
+      border-left-color: var(--blue);
+      background: rgba(56, 189, 248, 0.09);
+      color: #bae6fd;
+    }
+
+    .callout.green {
+      border-left-color: var(--green);
+      background: rgba(52, 211, 153, 0.09);
+      color: #a7f3d0;
+    }
+
+    /* Footer Navigation */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      z-index: 90;
+    }
+
+    .nav-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #283548;
+      border-color: var(--accent);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      font-size: 0.88rem;
+      font-weight: 700;
+      min-width: 70px;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    @media print {
+      body { overflow: visible; height: auto; }
+      .nav-bar, .progress-bar { display: none; }
+      .slide {
+        position: static;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        page-break-after: always;
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <main class="deck" id="deck">
+    <!-- SLIDE 1: CAPA -->
+    <section class="slide cover-slide active">
+      <span class="badge">Projeto PDV Web Core • Antunes Lanches</span>
+      <h1 class="cover-title">
+        Arquitetura <span>MVC</span>, Padrões de Projeto e <span>Persistência de Dados</span>
+      </h1>
+      <p class="cover-desc">
+        Mapeamento técnico de onde e como os conceitos de Engenharia de Software foram aplicados no código-fonte do sistema de Ponto de Venda e Autoatendimento.
+      </p>
+      <div class="pill-row">
+        <div class="pill">MVC (View, Controller, Model)</div>
+        <div class="pill">Model: Service • Entity • Repository</div>
+        <div class="pill">Padrão Repository</div>
+        <div class="pill">Padrão Observer (Spring Events)</div>
+        <div class="pill">JPA &amp; ORM (Hibernate)</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: VISÃO GERAL E STACK -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge">Visão Geral</span>
+          <h2 class="slide-title">Contexto do Sistema e Stack Tecnológica</h2>
+          <p class="slide-subtitle">Monolito modular em Spring Boot 3.3.5 com Java 17 atendendo 4 frentes operacionais</p>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom: 18px;">
+        <div class="card">
+          <h3>🍔 Totem</h3>
+          <p>Autoatendimento touch: categorias, customização de lanches, carrinho, PIX/Cartão e emissão de senha.</p>
+          <div class="tag-list"><span class="tag">/totem</span><span class="tag">TotemController</span></div>
+        </div>
+        <div class="card">
+          <h3>👨‍🍳 Cozinha (KDS)</h3>
+          <p>Fila em tempo real com transição de status: <code>RECEBIDO</code> → <code>EM_PREPARO</code> → <code>PRONTO</code> → <code>ENTREGUE</code>.</p>
+          <div class="tag-list"><span class="tag">/kds</span><span class="tag">KdsController</span></div>
+        </div>
+        <div class="card">
+          <h3>📺 Painel de Senhas</h3>
+          <p>Display de salão para acompanhamento das senhas diárias em preparo e prontas para retirada.</p>
+          <div class="tag-list"><span class="tag">/painel-senhas</span><span class="tag">PainelSenhasController</span></div>
+        </div>
+        <div class="card">
+          <h3>📊 Administrativo</h3>
+          <p>CRUD de produtos, categorias, adicionais, controle de estoque e relatórios de fechamento.</p>
+          <div class="tag-list"><span class="tag">/admin</span><span class="tag">Admin*Controller</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚙️ Tecnologias Principais (<code>pom.xml</code>)</h3>
+        <div class="grid-3" style="margin-top: 10px;">
+          <div>
+            <strong>Back-End &amp; Web</strong>
+            <ul>
+              <li>Java 17 (Records, Switch Expressions)</li>
+              <li><code>spring-boot-starter-web</code> (Spring MVC)</li>
+              <li><code>spring-boot-starter-validation</code></li>
+            </ul>
+          </div>
+          <div>
+            <strong>Front-End (Views)</strong>
+            <ul>
+              <li><code>spring-boot-starter-thymeleaf</code></li>
+              <li>HTML5 + CSS3 moderno + Vanilla JS</li>
+              <li>ZXing (geração de QR Code PIX)</li>
+            </ul>
+          </div>
+          <div>
+            <strong>Persistência &amp; Banco</strong>
+            <ul>
+              <li><code>spring-boot-starter-data-jpa</code></li>
+              <li>Hibernate (provedor ORM / JPA)</li>
+              <li>H2 (perfil <code>dev</code>) e PostgreSQL (<code>prod</code>)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: ARQUITETURA MVC + DECOMPOSIÇÃO DO MODEL -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge blue">Arquitetura MVC</span>
+          <h2 class="slide-title">MVC com Decomposição Rígida do Model</h2>
+          <p class="slide-subtitle">Separação estrita de responsabilidades entre apresentação, controle HTTP e as 3 subcamadas do Model</p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-box highlight-amber">
+          <strong>1. VIEW</strong>
+          <p style="font-size:0.84rem; color:#cbd5e1; margin-top:4px;">Thymeleaf + CSS/JS<br/><code>templates/</code> e <code>static/</code></p>
+        </div>
+        <div class="flow-arrow">⇄</div>
+        <div class="flow-box highlight-blue">
+          <strong>2. CONTROLLER</strong>
+          <p style="font-size:0.84rem; color:#cbd5e1; margin-top:4px;">Spring MVC / REST<br/><code>controller/*.java</code></p>
+        </div>
+        <div class="flow-arrow">⇄</div>
+        <div class="flow-box highlight-green" style="flex: 2.2;">
+          <strong>3. MODEL (Decomposto em 3 Subcamadas)</strong>
+          <div style="display:flex; gap:8px; margin-top:8px; font-size:0.8rem;">
+            <div style="flex:1; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px;">
+              <strong>Service</strong><br/>Regras &amp; <code>@Transactional</code>
+            </div>
+            <div style="flex:1; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px;">
+              <strong>Repository</strong><br/>Spring Data JPA
+            </div>
+            <div style="flex:1; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px;">
+              <strong>Entity</strong><br/>Domínio &amp; JPA
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Camada / Subcamada</th>
+            <th>Responsabilidade no Projeto</th>
+            <th>Anti-Pattern Evitado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>View</strong></td>
+            <td>Renderizar telas responsivas e capturar interações do usuário.</td>
+            <td>Não acessa banco de dados nem calcula totais/regras de negócio.</td>
+          </tr>
+          <tr>
+            <td><strong>Controller</strong></td>
+            <td>Mapear rotas HTTP, validar DTOs (<code>@Valid</code>) e delegar ao Service.</td>
+            <td>Sem SQL/JPQL, sem <code>EntityManager</code> e sem regra de negócio (God Controller).</td>
+          </tr>
+          <tr>
+            <td><strong>Model → Service</strong></td>
+            <td>Orquestrar casos de uso, transações e publicar eventos Observer.</td>
+            <td>Não importa pacotes de View/HTTP nem depende de detalhes de UI.</td>
+          </tr>
+          <tr>
+            <td><strong>Model → Repository</strong></td>
+            <td>Executar operações CRUD e consultas tipadas via Spring Data JPA.</td>
+            <td>Não contém regras de negócio nem dispara notificações.</td>
+          </tr>
+          <tr>
+            <td><strong>Model → Entity</strong></td>
+            <td>Representar estado e relacionamentos do domínio com mapeamento JPA.</td>
+            <td>Não chama Services nem executa persistência própria (sem Active Record).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SLIDE 4: CAMADA VIEW -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge">MVC • Camada View</span>
+          <h2 class="slide-title">Camada View: Templates Thymeleaf e Assets Estáticos</h2>
+          <p class="slide-subtitle">Localizada em <code>src/main/resources/templates/</code> e <code>src/main/resources/static/</code></p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>📄 Templates Thymeleaf (<code>templates/</code>)</h3>
+          <ul>
+            <li><strong>Fragments reutilizáveis (<code>layout/</code>):</strong> <code>header.html</code> e <code>footer.html</code> padronizam cabeçalho e rodapé.</li>
+            <li><strong>Totem (<code>totem/index.html</code>):</strong> Recebe do Controller <code>categorias</code>, <code>produtos</code> e <code>tipoConsumo</code> via <code>Model</code> do Spring MVC.</li>
+            <li><strong>Cozinha (<code>kds/index.html</code>):</strong> Renderiza a fila de preparo por status.</li>
+            <li><strong>Salão (<code>senhas/index.html</code>):</strong> Exibe senhas em preparo e prontas.</li>
+            <li><strong>Admin (<code>admin/index.html</code>):</strong> Painel de gestão de cardápio, estoque e relatórios.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>🎨 Estáticos &amp; Interatividade (<code>static/</code>)</h3>
+          <ul>
+            <li><strong>Estilos (<code>static/css/</code>):</strong> Layout responsivo com CSS moderno e variáveis customizadas.</li>
+            <li><strong>Scripts (<code>static/js/</code>):</strong> <code>totem.js</code>, <code>kds.js</code>, <code>painel-senhas.js</code> e <code>admin.js</code> consomem as APIs REST via <code>fetch</code> para atualização dinâmica sem acoplamento ao banco.</li>
+            <li><strong>Mídia (<code>static/img/</code>):</strong> Logotipo e ilustrações SVG dos produtos (<code>burger-hero.svg</code>, <code>fries.svg</code>, <code>drink.svg</code>, etc.).</li>
+          </ul>
+          <div class="callout" style="margin-top: 14px;">
+            <strong>Separação estrita:</strong> O JavaScript da View apenas envia DTOs JSON e exibe o resultado validado e calculado pelo servidor.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: CAMADA CONTROLLER -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge blue">MVC • Camada Controller</span>
+          <h2 class="slide-title">Camada Controller: Roteamento MVC e APIs REST</h2>
+          <p class="slide-subtitle">Pacote <code>com.restaurante.pdv.controller</code> — Entrada HTTP, validação com <code>@Valid</code> e delegação</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom: 16px;">
+            <h3>🖥️ Controllers de View (<code>@Controller</code>)</h3>
+            <ul>
+              <li><code>TotemViewController</code>: Rotas <code>/</code>, <code>/totem</code>, <code>/totem/cardapio</code> e sessão do cliente.</li>
+              <li><code>KdsViewController</code>: Renderiza <code>kds/index</code>.</li>
+              <li><code>AdminViewController</code>: Renderiza <code>admin/index</code>.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>🔌 Controllers REST (<code>@RestController</code>)</h3>
+            <ul>
+              <li><code>TotemController</code> &amp; <code>PedidoController</code>: Criação e consulta de pedidos.</li>
+              <li><code>PagamentoController</code>: Cobrança PIX e simulação de cartão.</li>
+              <li><code>KdsController</code> &amp; <code>PainelSenhasController</code>: Fluxo da cozinha e painel.</li>
+              <li><code>AdminProdutoController</code>, <code>AdminCategoriaController</code>, <code>AdminOpcaoAdicionalController</code>, <code>AdminRelatorioController</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <pre><code><span class="ann">@Controller</span>
+<span class="kw">public class</span> <span class="typ">TotemViewController</span> {
+    <span class="kw">private final</span> <span class="typ">CategoriaService</span> categoriaService;
+    <span class="kw">private final</span> <span class="typ">ProdutoService</span> produtoService;
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/totem"</span>)
+    <span class="kw">public</span> <span class="typ">String</span> totem(<span class="typ">Model</span> model, <span class="typ">HttpSession</span> session) {
+        carregarDadosCardapio(model, session);
+        <span class="kw">return</span> <span class="str">"totem/index"</span>; <span class="cmt">// View Thymeleaf</span>
+    }
+
+    <span class="kw">private void</span> carregarDadosCardapio(<span class="typ">Model</span> model, <span class="typ">HttpSession</span> s) {
+        model.addAttribute(<span class="str">"categorias"</span>, categoriaService.buscarAtivas());
+        model.addAttribute(<span class="str">"produtos"</span>, produtoService.buscarAtivos());
+    }
+}</code></pre>
+          <div class="callout blue">
+            <strong>Proteção por DTOs:</strong> Os controllers recebem DTOs (<code>dto/request/</code>) com Bean Validation (<code>@Valid</code>) e retornam DTOs higienizados (<code>dto/response/</code>), nunca expondo entidades JPA diretamente. Erros são tratados globalmente pelo <code>GlobalExceptionHandler</code>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: MODEL (SERVICE, ENTITY, REPOSITORY) -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge green">MVC • Camada Model</span>
+          <h2 class="slide-title">Subcamadas do Model: Service, Entity e Repository</h2>
+          <p class="slide-subtitle">Pacote <code>com.restaurante.pdv.model</code> dividido em 3 responsabilidades independentes</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card" style="border-top: 3px solid var(--green);">
+          <h3>🧠 Service (<code>model.service</code>)</h3>
+          <p>Centraliza regras de negócio, cálculos monetários com <code>BigDecimal</code>, transações (<code>@Transactional</code>) e eventos.</p>
+          <ul style="margin-top: 10px;">
+            <li><code>PedidoService</code>: Valida estoque, calcula subtotais, gera senha e publica eventos.</li>
+            <li><code>ProdutoService</code>: CRUD e controle de estoque.</li>
+            <li><code>PagamentoService</code> &amp; <code>PixEmvService</code>: Processamento de pagamentos e payload PIX.</li>
+            <li><code>RelatorioService</code>: Fechamento de caixa.</li>
+            <li><code>SenhaSequencialService</code>: Senha diária thread-safe.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-top: 3px solid var(--blue);">
+          <h3>📦 Entity (<code>model.entity</code>)</h3>
+          <p>Objetos de domínio puro mapeados para o banco relacional via JPA.</p>
+          <ul style="margin-top: 10px;">
+            <li><code>Categoria</code> &amp; <code>Produto</code></li>
+            <li><code>OpcaoAdicional</code> (customização)</li>
+            <li><code>Pedido</code>, <code>ItemPedido</code>, <code>ItemPedidoOpcao</code></li>
+            <li><code>CobrancaPix</code></li>
+            <li><strong>Enums:</strong> <code>StatusPedido</code>, <code>FormaPagamento</code>, <code>TipoConsumo</code>, <code>TipoOpcao</code></li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-top: 3px solid var(--purple);">
+          <h3>🗄️ Repository (<code>model.repository</code>)</h3>
+          <p>Interfaces de acesso a dados estendendo <code>JpaRepository&lt;T, ID&gt;</code>.</p>
+          <ul style="margin-top: 10px;">
+            <li><code>ProdutoRepository</code></li>
+            <li><code>PedidoRepository</code></li>
+            <li><code>CategoriaRepository</code></li>
+            <li><code>OpcaoAdicionalRepository</code></li>
+            <li><code>ItemPedidoRepository</code></li>
+            <li><code>CobrancaPixRepository</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <strong>Benefício da Decomposição:</strong> Alterar uma regra de cálculo de combo impacta apenas o <code>Service</code>; alterar um índice ou consulta SQL impacta apenas o <code>Repository</code>; alterar atributos de domínio fica isolado na <code>Entity</code>.
+      </div>
+    </section>
+
+    <!-- SLIDE 7: PADRÃO REPOSITORY -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge purple">Padrão de Projeto</span>
+          <h2 class="slide-title">Padrão Repository na Prática</h2>
+          <p class="slide-subtitle">Abstração da camada de persistência com Spring Data JPA e Inversão de Dependência (DIP)</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>🎯 Por que e onde foi utilizado?</h3>
+          <ul>
+            <li>Os Services (ex: <code>PedidoService</code>, <code>ProdutoService</code>) dependem apenas de <strong>interfaces</strong> (<code>PedidoRepository</code>, <code>ProdutoRepository</code>), nunca de JDBC ou <code>EntityManager</code> direto.</li>
+            <li>O Spring Data JPA gera em tempo de execução as implementações CRUD (<code>save</code>, <code>findById</code>, <code>delete</code>).</li>
+            <li><strong>Derived Queries:</strong> Métodos cujo nome gera SQL automaticamente (<code>findByCategoriaIdAndAtivoTrue</code>).</li>
+            <li><strong>Consultas JPQL (<code>@Query</code>):</strong> Agregações analíticas e relatórios em <code>PedidoRepository</code>.</li>
+          </ul>
+        </div>
+
+        <div>
+          <pre><code><span class="ann">@Repository</span>
+<span class="kw">public interface</span> <span class="typ">ProdutoRepository</span> <span class="kw">extends</span> <span class="typ">JpaRepository</span>&lt;<span class="typ">Produto</span>, <span class="typ">Long</span>&gt; {
+    <span class="typ">List</span>&lt;<span class="typ">Produto</span>&gt; findByAtivoTrue();
+    <span class="typ">List</span>&lt;<span class="typ">Produto</span>&gt; findByCategoriaIdAndAtivoTrue(<span class="typ">Long</span> categoriaId);
+    <span class="kw">boolean</span> existsByNomeIgnoreCase(<span class="typ">String</span> nome);
+}
+
+<span class="ann">@Repository</span>
+<span class="kw">public interface</span> <span class="typ">PedidoRepository</span> <span class="kw">extends</span> <span class="typ">JpaRepository</span>&lt;<span class="typ">Pedido</span>, <span class="typ">Long</span>&gt; {
+    <span class="typ">List</span>&lt;<span class="typ">Pedido</span>&gt; findByStatusInOrderByDataHoraAsc(<span class="typ">Collection</span>&lt;<span class="typ">StatusPedido</span>&gt; s);
+
+    <span class="ann">@Query</span>(<span class="str">"SELECT COUNT(p), COALESCE(SUM(p.valorTotal), 0) FROM Pedido p "</span> +
+           <span class="str">"WHERE p.pago = true AND p.dataHora &gt;= :inicio AND p.dataHora &lt;= :fim"</span>)
+    <span class="typ">List</span>&lt;<span class="typ">Object</span>[]&gt; somarFaturamentoEPedidosPorPeriodo(
+            <span class="ann">@Param</span>(<span class="str">"inicio"</span>) <span class="typ">LocalDateTime</span> inicio,
+            <span class="ann">@Param</span>(<span class="str">"fim"</span>) <span class="typ">LocalDateTime</span> fim);
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: PADRÃO OBSERVER -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge">Padrão de Projeto</span>
+          <h2 class="slide-title">Padrão Observer com Spring Events</h2>
+          <p class="slide-subtitle">Desacoplamento reativo entre o núcleo de pedidos e os módulos de Cozinha (KDS), Comprovante e Estoque</p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-box highlight-amber">
+          <strong>Subject / Publisher</strong>
+          <p style="font-size:0.84rem; color:#cbd5e1; margin-top:4px;"><code>PedidoService</code><br/><code>ApplicationEventPublisher</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight-blue">
+          <strong>Eventos Imutáveis</strong>
+          <p style="font-size:0.84rem; color:#cbd5e1; margin-top:4px;"><code>PedidoCriadoEvent</code> (record)<br/><code>PedidoStatusAlteradoEvent</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight-green" style="flex: 1.7;">
+          <strong>Observers (<code>@EventListener</code>)</strong>
+          <p style="font-size:0.82rem; color:#cbd5e1; margin-top:4px; text-align:left; padding-left:10px;">
+            • <code>CozinhaObserverListener</code> (fila KDS)<br/>
+            • <code>NotificacaoComprovanteListener</code> (senha)<br/>
+            • <code>EstoqueEventListener</code> (reconciliação)
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <pre><code><span class="cmt">// Evento imutável em com.restaurante.pdv.event</span>
+<span class="kw">public record</span> <span class="typ">PedidoCriadoEvent</span>(
+    <span class="typ">Long</span> pedidoId,
+    <span class="typ">Integer</span> numeroSenha,
+    <span class="typ">LocalDateTime</span> dataHora,
+    <span class="typ">BigDecimal</span> valorTotal,
+    <span class="typ">String</span> nomeCliente,
+    <span class="typ">String</span> cpfCliente
+) <span class="kw">implements</span> <span class="typ">Serializable</span> {}</code></pre>
+
+        <pre><code><span class="cmt">// Observer em com.restaurante.pdv.event.listener</span>
+<span class="ann">@Component</span>
+<span class="kw">public class</span> <span class="typ">CozinhaObserverListener</span> <span class="kw">implements</span> <span class="typ">KdsEventListener</span> {
+
+    <span class="ann">@Override</span>
+    <span class="ann">@EventListener</span>
+    <span class="kw">public void</span> onPedidoCriado(<span class="typ">PedidoCriadoEvent</span> event) {
+        filaPedidosCozinha.add(event.getPedidoId());
+        log.info(<span class="str">"[KDS-COZINHA] Pedido #{} enfileirado"</span>, event.getPedidoId());
+    }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: PERSISTÊNCIA COM JPA E ORM (HIBERNATE) -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge purple">Persistência de Dados</span>
+          <h2 class="slide-title">JPA e ORM (Hibernate) no Mapeamento Relacional</h2>
+          <p class="slide-subtitle">Como objetos Java viram tabelas relacionais com integridade transacional e concorrência otimista</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <pre><code><span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = <span class="str">"produtos"</span>, indexes = {
+    <span class="ann">@Index</span>(name = <span class="str">"idx_produto_categoria"</span>, columnList = <span class="str">"categoria_id"</span>)
+})
+<span class="kw">public class</span> <span class="typ">Produto</span> <span class="kw">implements</span> <span class="typ">Serializable</span> {
+    <span class="ann">@Id</span>
+    <span class="ann">@GeneratedValue</span>(strategy = <span class="typ">GenerationType</span>.IDENTITY)
+    <span class="kw">private</span> <span class="typ">Long</span> id;
+
+    <span class="ann">@Column</span>(nullable = <span class="kw">false</span>, precision = <span class="num">10</span>, scale = <span class="num">2</span>)
+    <span class="kw">private</span> <span class="typ">BigDecimal</span> preco;
+
+    <span class="ann">@Version</span> <span class="cmt">// Concorrência Otimista contra race conditions</span>
+    <span class="kw">private</span> <span class="typ">Long</span> version;
+
+    <span class="ann">@ManyToOne</span>(fetch = <span class="typ">FetchType</span>.LAZY)
+    <span class="ann">@JoinColumn</span>(name = <span class="str">"categoria_id"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> <span class="typ">Categoria</span> categoria;
+}</code></pre>
+        </div>
+
+        <div class="card">
+          <h3>🔧 Papéis na Persistência</h3>
+          <ul>
+            <li><strong>JPA (Especificação):</strong> Define o contrato padrão (<code>jakarta.persistence.*</code>) com <code>@Entity</code>, <code>@Table</code>, <code>@ManyToOne</code>, <code>@ManyToMany</code> e <code>@Version</code>.</li>
+            <li><strong>Hibernate (ORM):</strong> Motor que gera o DDL e traduz objetos Java para SQL no <strong>H2</strong> (<code>dev</code>) ou <strong>PostgreSQL</strong> (<code>prod</code>).</li>
+            <li><strong>Configuração (<code>application-dev.yml</code>):</strong>
+              <code>ddl-auto: update</code>, <code>show-sql: true</code>, <code>open-in-view: false</code> (evita lazy-loading na View).</li>
+            <li><strong>Concorrência Otimista (<code>@Version</code>):</strong> Garante que duas compras simultâneas do último item em estoque não gerem saldo negativo.</li>
+            <li><strong>Atomicidade (<code>@Transactional</code>):</strong> Em <code>PedidoService</code>, criação do pedido + itens + baixa de estoque ocorrem em transação única.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: SÍNTESE -->
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <span class="badge green">Resumo Executivo</span>
+          <h2 class="slide-title">Mapa Conceitual: Da Teoria ao Código</h2>
+          <p class="slide-subtitle">Síntese de onde cada conceito foi aplicado no repositório <code>projeto-pdv</code></p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Conceito</th>
+            <th>Onde está implementado</th>
+            <th>Impacto na Qualidade do Sistema</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>MVC — View</strong></td>
+            <td><code>src/main/resources/templates/**</code> e <code>static/**</code></td>
+            <td>Interface responsiva desacoplada de banco de dados e regras de negócio.</td>
+          </tr>
+          <tr>
+            <td><strong>MVC — Controller</strong></td>
+            <td><code>com.restaurante.pdv.controller.*</code></td>
+            <td>Validação sintática com DTOs/<code>@Valid</code> e roteamento limpo MVC/REST.</td>
+          </tr>
+          <tr>
+            <td><strong>MVC — Model (Service)</strong></td>
+            <td><code>com.restaurante.pdv.model.service.*</code></td>
+            <td>Regras centralizadas, transações ACID (<code>@Transactional</code>) e testabilidade.</td>
+          </tr>
+          <tr>
+            <td><strong>MVC — Model (Entity)</strong></td>
+            <td><code>com.restaurante.pdv.model.entity.*</code></td>
+            <td>Domínio rico e tipado (<code>BigDecimal</code>, Enums) sem acoplamento de persistência.</td>
+          </tr>
+          <tr>
+            <td><strong>Padrão Repository</strong></td>
+            <td><code>com.restaurante.pdv.model.repository.*</code></td>
+            <td>Desacoplamento de SQL/JPQL e reutilização via Spring Data JPA.</td>
+          </tr>
+          <tr>
+            <td><strong>Padrão Observer</strong></td>
+            <td><code>event.*</code> + <code>event.listener.*</code> + <code>PedidoService</code></td>
+            <td>Extensibilidade reativa (KDS, Comprovante, Estoque) sem acoplamento direto.</td>
+          </tr>
+          <tr>
+            <td><strong>JPA &amp; ORM (Hibernate)</strong></td>
+            <td>Anotações <code>jakarta.persistence</code> + <code>application-*.yml</code></td>
+            <td>Portabilidade H2/PostgreSQL, índices, lazy loading e lock otimista (<code>@Version</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout blue" style="margin-top: 18px;">
+        <strong>Dica de navegação:</strong> Use as setas <strong>← / →</strong> ou <strong>Espaço</strong> para navegar entre os slides, ou pressione <strong>Ctrl + P</strong> para exportar em PDF.
+      </div>
+    </section>
+  </main>
+
+  <footer class="nav-bar">
+    <div class="nav-info">Sistema PDV Web Core — Antunes Lanches</div>
+    <div class="nav-controls">
+      <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+      <span class="slide-counter" id="slideCounter">1 / 10</span>
+      <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+    </div>
+  </footer>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let current = 0;
+
+    function renderSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === slides.length - 1;
+    }
+
+    function changeSlide(delta) {
+      renderSlide(current + delta);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        changeSlide(-1);
+      } else if (e.key === 'Home') {
+        renderSlide(0);
+      } else if (e.key === 'End') {
+        renderSlide(slides.length - 1);
+      }
+    });
+
+    renderSlide(0);
+  </script>
+</body>
+</html>
