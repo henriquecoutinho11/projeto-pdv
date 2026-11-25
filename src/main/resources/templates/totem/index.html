@@ -14,6 +14,7 @@
     <link rel="stylesheet" th:href="@{/css/base.css}">
     <link rel="stylesheet" th:href="@{/css/components.css}">
     <link rel="stylesheet" th:href="@{/css/totem.css}">
+    <link rel="stylesheet" th:href="@{/css/checkout.css}">
     <link rel="icon" type="image/svg+xml" th:href="@{/img/logo.svg}">
 </head>
 <body class="totem-viewport" th:data-abrir-cardapio="${abrirCardapioDireto != null && abrirCardapioDireto}">
@@ -1135,6 +1136,326 @@
             </div>
         </div>
     </div>
+
+    <!-- ====================================================================
+         TELA 5: CHECKOUT DE PAGAMENTO (CARD-14)
+         ==================================================================== -->
+    <section id="screen-checkout" class="checkout-screen hidden" aria-label="Checkout - Escolha a Forma de Pagamento">
+
+        <!-- Cabeçalho da Tela -->
+        <div class="checkout-header">
+            <span class="badge badge-red" style="margin-bottom: var(--spacing-sm);">Passo 4 de 4</span>
+            <h2 class="dining-title">Como você quer pagar?</h2>
+            <p class="dining-subtitle">Escolha a forma de pagamento. Rápido, seguro e sem complicação!</p>
+        </div>
+
+        <!-- Layout Principal: Resumo do Pedido + Seleção de Pagamento -->
+        <div class="checkout-layout">
+
+            <!-- Coluna Esquerda: Resumo do Pedido -->
+            <div class="checkout-order-summary">
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <span class="summary-card-icon">🧾</span>
+                        <h3 class="summary-card-title">Resumo do Pedido</h3>
+                    </div>
+
+                    <!-- Lista de Itens do Pedido -->
+                    <ul class="checkout-items-list" id="checkout-items-list">
+                        <!-- Itens renderizados via JS -->
+                    </ul>
+
+                    <!-- Totalizador -->
+                    <div class="checkout-totals-box">
+                        <div class="checkout-total-row">
+                            <span class="total-label">Subtotal</span>
+                            <span class="total-value" id="checkout-subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="checkout-total-row checkout-total-final">
+                            <span class="total-label-final">Total a Pagar</span>
+                            <span class="total-value-final" id="checkout-total">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- Dados do Cliente (se informados) -->
+                    <div class="checkout-client-info" id="checkout-client-info" style="display:none;">
+                        <div class="client-info-row">
+                            <span class="client-info-icon">👤</span>
+                            <span class="client-info-text" id="checkout-nome-cliente"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Formas de Pagamento + Painel Dinâmico -->
+            <div class="checkout-payment-panel">
+
+                <!-- Seletor de Forma de Pagamento -->
+                <div class="payment-method-selector" id="payment-method-selector">
+
+                    <!-- Opção: PIX -->
+                    <button type="button" class="payment-method-card active" id="btn-pay-pix" data-metodo="PIX">
+                        <div class="payment-method-icon">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="40" rx="8" fill="rgba(0,180,100,0.15)"/>
+                                <path d="M20 8L26.5 14.5H23V20H26.5L20 26.5L13.5 20H17V14.5H13.5L20 8Z" fill="#00B464" stroke="#00B464" stroke-width="0.5"/>
+                                <path d="M8 20L14.5 13.5V17H20V13.5L26.5 20L20 26.5V23H14.5V26.5L8 20Z" fill="#00B464" stroke="#00B464" stroke-width="0.5"/>
+                            </svg>
+                        </div>
+                        <div class="payment-method-info">
+                            <span class="payment-method-name">PIX</span>
+                            <span class="payment-method-desc">QR Code instantâneo · Aprovação em segundos</span>
+                        </div>
+                        <span class="payment-method-badge badge-pix">Recomendado</span>
+                    </button>
+
+                    <!-- Opção: Cartão de Crédito -->
+                    <button type="button" class="payment-method-card" id="btn-pay-credito" data-metodo="CARTAO_CREDITO">
+                        <div class="payment-method-icon">
+                            <div class="card-icon-box card-icon-credito">💳</div>
+                        </div>
+                        <div class="payment-method-info">
+                            <span class="payment-method-name">Crédito</span>
+                            <span class="payment-method-desc">Aproxime ou insira seu cartão na maquininha</span>
+                        </div>
+                        <span class="payment-method-badge badge-card">Aceito</span>
+                    </button>
+
+                    <!-- Opção: Cartão de Débito -->
+                    <button type="button" class="payment-method-card" id="btn-pay-debito" data-metodo="CARTAO_DEBITO">
+                        <div class="payment-method-icon">
+                            <div class="card-icon-box card-icon-debito">💳</div>
+                        </div>
+                        <div class="payment-method-info">
+                            <span class="payment-method-name">Débito</span>
+                            <span class="payment-method-desc">Aproxime ou insira seu cartão na maquininha</span>
+                        </div>
+                        <span class="payment-method-badge badge-card">Aceito</span>
+                    </button>
+                </div>
+
+                <!-- ==========================================
+                     PAINEL DINÂMICO: PIX (padrão ativo)
+                     ========================================== -->
+                <div class="payment-panel-content" id="panel-pix">
+
+                    <!-- Estado: Gerando QR Code -->
+                    <div class="pix-loading-state" id="pix-loading">
+                        <div class="pix-spinner"></div>
+                        <p class="pix-loading-text">Gerando seu QR Code PIX...</p>
+                    </div>
+
+                    <!-- Estado: QR Code Pronto -->
+                    <div class="pix-ready-state hidden" id="pix-ready">
+                        <div class="qr-code-wrapper">
+                            <div class="qr-code-frame">
+                                <img id="pix-qr-image" src="" alt="QR Code PIX" class="qr-code-img">
+                            </div>
+                            <div class="pix-timer-ring">
+                                <svg class="timer-svg" viewBox="0 0 60 60">
+                                    <circle class="timer-track" cx="30" cy="30" r="26"/>
+                                    <circle class="timer-progress" id="pix-timer-circle" cx="30" cy="30" r="26" stroke-dasharray="163.4" stroke-dashoffset="0"/>
+                                </svg>
+                                <span class="timer-label" id="pix-timer-label">5:00</span>
+                            </div>
+                        </div>
+
+                        <div class="pix-instructions">
+                            <p class="pix-step"><span class="step-num">1</span> Abra o app do seu banco</p>
+                            <p class="pix-step"><span class="step-num">2</span> Escolha <strong>PIX → Pagar com QR Code</strong></p>
+                            <p class="pix-step"><span class="step-num">3</span> Aponte a câmera para o código acima</p>
+                            <p class="pix-step"><span class="step-num">4</span> Confirme o pagamento de <strong id="pix-valor-label">R$ 0,00</strong></p>
+                        </div>
+
+                        <!-- Copia e Cola -->
+                        <div class="pix-copy-wrapper">
+                            <span class="pix-copy-label">Ou copie o código:</span>
+                            <div class="pix-copy-row">
+                                <input type="text" id="pix-copia-cola" class="pix-code-input" readonly>
+                                <button type="button" class="btn-copy-pix" id="btn-copy-pix" title="Copiar código PIX">
+                                    📋 Copiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Polling de Status -->
+                        <div class="pix-status-bar" id="pix-status-bar">
+                            <span class="pix-status-dot"></span>
+                            <span id="pix-status-text">Aguardando confirmação do pagamento...</span>
+                        </div>
+                    </div>
+
+                    <!-- Estado: PIX Expirado -->
+                    <div class="pix-expired-state hidden" id="pix-expired">
+                        <div class="expired-icon">⌛</div>
+                        <p class="expired-title">QR Code Expirado</p>
+                        <p class="expired-desc">O código PIX expirou. Gere um novo para continuar.</p>
+                        <button type="button" class="btn btn-gold" id="btn-reemitir-pix">🔄 Gerar Novo QR Code</button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     PAINEL DINÂMICO: CARTÃO (oculto por padrão)
+                     ========================================== -->
+                <div class="payment-panel-content hidden" id="panel-cartao">
+                    <div class="card-terminal-wrapper">
+                        <div class="card-terminal-visual">
+                            <div class="terminal-screen">
+                                <span class="terminal-logo">💳</span>
+                                <p class="terminal-ready-text" id="terminal-ready-text">Maquininha Pronta</p>
+                                <p class="terminal-instruction" id="terminal-instruction">Aproxime ou insira seu cartão para pagar</p>
+                                <div class="terminal-amount">
+                                    <span class="terminal-amount-label">Valor:</span>
+                                    <strong class="terminal-amount-value" id="terminal-amount">R$ 0,00</strong>
+                                </div>
+                            </div>
+                            <div class="terminal-nfc-pulse" id="terminal-nfc-pulse">
+                                <div class="nfc-ring ring-1"></div>
+                                <div class="nfc-ring ring-2"></div>
+                                <div class="nfc-ring ring-3"></div>
+                                <span class="nfc-icon">📡</span>
+                            </div>
+                        </div>
+
+                        <!-- Estado: Processando -->
+                        <div class="card-processing hidden" id="card-processing">
+                            <div class="processing-spinner"></div>
+                            <p>Processando transação...</p>
+                        </div>
+
+                        <!-- Botão de Simulação (Totem Demonstração) -->
+                        <div class="card-sim-actions" id="card-sim-actions">
+                            <p class="sim-label">⚡ Simulação de Terminal</p>
+                            <button type="button" class="btn btn-gold btn-sim-pay" id="btn-sim-pay">
+                                Simular Pagamento Aprovado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Rodapé de Ações do Checkout -->
+        <div class="checkout-footer-actions">
+            <button type="button" class="btn btn-outline" id="btn-checkout-back">
+                <span class="btn-arrow-back">⬅</span>
+                <span>Voltar</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         TELA 6: CONFIRMAÇÃO DO PEDIDO / SENHA DIGITAL (CARD-14)
+         ==================================================================== -->
+    <section id="screen-confirmacao" class="confirmacao-screen hidden" aria-label="Pedido Confirmado - Senha Digital">
+
+        <!-- Animação de Sucesso -->
+        <div class="confirmacao-success-anim" id="confirmacao-anim">
+            <div class="success-checkmark">
+                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="checkmark-svg">
+                    <circle class="checkmark-circle" cx="40" cy="40" r="36" stroke="#4CAF50" stroke-width="4"/>
+                    <path class="checkmark-path" d="M22 40L34 52L58 28" stroke="#4CAF50" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Senha Digital / Ticket -->
+        <div class="ticket-wrapper">
+            <div class="ticket-card" id="ticket-card">
+
+                <!-- Cabeçalho do Ticket -->
+                <div class="ticket-header">
+                    <span class="ticket-brand">🍔 Antunes Lanches</span>
+                    <span class="ticket-title">Pedido Confirmado!</span>
+                </div>
+
+                <!-- Número da Senha (Principal) -->
+                <div class="ticket-senha-block">
+                    <span class="senha-label">Sua Senha</span>
+                    <div class="senha-numero-display" id="ticket-numero-senha">
+                        <span class="senha-hashtag">#</span>
+                        <span class="senha-digits" id="senha-digits">000</span>
+                    </div>
+                    <span class="senha-hint">Fique atento ao painel de senhas!</span>
+                </div>
+
+                <!-- Perfuração Decorativa -->
+                <div class="ticket-perforation">
+                    <div class="perf-left"></div>
+                    <div class="perf-dashes"></div>
+                    <div class="perf-right"></div>
+                </div>
+
+                <!-- Detalhes do Pedido no Ticket -->
+                <div class="ticket-details">
+                    <div class="ticket-detail-row">
+                        <span class="ticket-detail-label">Pedido Nº:</span>
+                        <span class="ticket-detail-value" id="ticket-pedido-id">—</span>
+                    </div>
+                    <div class="ticket-detail-row">
+                        <span class="ticket-detail-label">Pagamento:</span>
+                        <span class="ticket-detail-value ticket-pago-badge" id="ticket-forma-pagamento">—</span>
+                    </div>
+                    <div class="ticket-detail-row">
+                        <span class="ticket-detail-label">Total Pago:</span>
+                        <span class="ticket-detail-value ticket-gold" id="ticket-valor-total">R$ 0,00</span>
+                    </div>
+                    <div class="ticket-detail-row" id="ticket-row-cliente" style="display:none;">
+                        <span class="ticket-detail-label">Cliente:</span>
+                        <span class="ticket-detail-value" id="ticket-nome-cliente">—</span>
+                    </div>
+                    <div class="ticket-detail-row">
+                        <span class="ticket-detail-label">Horário:</span>
+                        <span class="ticket-detail-value" id="ticket-horario">—</span>
+                    </div>
+                </div>
+
+                <!-- Itens do Pedido (Compacto) -->
+                <div class="ticket-items-block">
+                    <span class="ticket-items-title">Itens do Pedido</span>
+                    <ul class="ticket-items-list" id="ticket-items-list">
+                        <!-- Renderizado via JS -->
+                    </ul>
+                </div>
+
+                <!-- Status de Preparo -->
+                <div class="ticket-status-block">
+                    <div class="status-pipeline">
+                        <div class="status-node status-done" id="status-node-recebido">
+                            <span class="status-node-icon">✅</span>
+                            <span class="status-node-label">Recebido</span>
+                        </div>
+                        <div class="status-connector"></div>
+                        <div class="status-node status-pending" id="status-node-preparo">
+                            <span class="status-node-icon">🍳</span>
+                            <span class="status-node-label">Em Preparo</span>
+                        </div>
+                        <div class="status-connector"></div>
+                        <div class="status-node status-pending" id="status-node-pronto">
+                            <span class="status-node-icon">🔔</span>
+                            <span class="status-node-label">Pronto!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rodapé do Ticket -->
+                <div class="ticket-footer">
+                    <p class="ticket-footer-msg">Obrigado pela preferência! 😊</p>
+                    <p class="ticket-footer-redirect">
+                        Voltando ao início em <strong id="redirect-countdown">15</strong>s
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ação Manual: Novo Pedido -->
+        <div class="confirmacao-actions">
+            <button type="button" class="btn btn-gold btn-novo-pedido" id="btn-novo-pedido">
+                🏠 Fazer Novo Pedido
+            </button>
+        </div>
+    </section>
 
     <!-- Script Principal do Totem -->
     <script th:src="@{/js/totem.js}"></script>

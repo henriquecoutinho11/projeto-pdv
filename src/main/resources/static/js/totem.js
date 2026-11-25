@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDrawerContinue = document.getElementById('btn-drawer-continue');
     const btnDrawerCheckout = document.getElementById('btn-drawer-checkout');
 
+    // Telas de Checkout e Confirmação (CARD-14)
+    const screenCheckout = document.getElementById('screen-checkout');
+    const screenConfirmacao = document.getElementById('screen-confirmacao');
+
     // Tela de Identificação do Cliente
     const idSummaryModalidade = document.getElementById('id-summary-modalidade');
     const idSummaryItems = document.getElementById('id-summary-items');
@@ -278,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
         screenDining.classList.add('hidden');
         screenMenu.classList.add('hidden');
         if (screenIdentification) screenIdentification.classList.add('hidden');
+        if (screenCheckout) screenCheckout.classList.add('hidden');
+        if (screenConfirmacao) screenConfirmacao.classList.add('hidden');
 
         if (screenName === 'welcome') {
             screenWelcome.classList.remove('hidden');
@@ -312,6 +318,22 @@ document.addEventListener('DOMContentLoaded', () => {
             atualizarResumoIdentificacao();
             selecionarCampoIdentificacao('nome');
             resetInactivityTimer();
+        } else if (screenName === 'checkout') {
+            stopCarousel();
+            if (screenCheckout) screenCheckout.classList.remove('hidden');
+            btnRestart.style.display = 'inline-flex';
+            STATE.isActiveOrder = true;
+            if (floatingCartBar) floatingCartBar.classList.add('hidden');
+            fecharCartDrawer();
+            resetInactivityTimer();
+            inicializarCheckout();
+        } else if (screenName === 'confirmacao') {
+            stopCarousel();
+            stopInactivityTimer();
+            if (screenConfirmacao) screenConfirmacao.classList.remove('hidden');
+            if (floatingCartBar) floatingCartBar.classList.add('hidden');
+            fecharCartDrawer();
+            btnRestart.style.display = 'none';
         }
     }
 
@@ -1440,12 +1462,8 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify(payload)
         }).catch(err => console.warn('Erro ao registrar identificação no servidor:', err));
 
-        const identificacaoMsg = payload.nomeCliente 
-            ? `Identificação salva: ${payload.nomeCliente}!` 
-            : 'Avançando com cliente não identificado!';
-
-        showToast('Identificação Concluída! ✅', `${identificacaoMsg} Redirecionando para o Pagamento...`);
-        console.log('Dados do cliente para o pedido:', payload);
+        // Avançar para a tela de checkout (CARD-14)
+        transitionToScreen('checkout');
     }
 
     function showToast(title, message) {
@@ -1546,6 +1564,15 @@ document.addEventListener('DOMContentLoaded', () => {
         closeCustomizationModal();
         fecharCartDrawer();
 
+        // Limpar timers do checkout (CARD-14)
+        if (typeof CHECKOUT_STATE !== 'undefined') {
+            if (CHECKOUT_STATE.pixTimer) { clearInterval(CHECKOUT_STATE.pixTimer); CHECKOUT_STATE.pixTimer = null; }
+            if (CHECKOUT_STATE.pixPollingTimer) { clearInterval(CHECKOUT_STATE.pixPollingTimer); CHECKOUT_STATE.pixPollingTimer = null; }
+            if (CHECKOUT_STATE.confirmacaoRedirectTimer) { clearInterval(CHECKOUT_STATE.confirmacaoRedirectTimer); CHECKOUT_STATE.confirmacaoRedirectTimer = null; }
+            CHECKOUT_STATE.pedidoId = null;
+            CHECKOUT_STATE.formaPagamento = 'PIX';
+        }
+
         sessionStorage.removeItem('tipoConsumo');
         sessionStorage.removeItem('pdv_carrinho');
         sessionStorage.removeItem('pdv_nome_cliente');
@@ -1614,6 +1641,530 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnCallAttendant.textContent = 'Chamar Atendente no Totem';
                 btnCallAttendant.disabled = false;
             }, 2500);
+        });
+    }
+
+    // Inicialização da UI do Carrinho e Identificação
+    atualizarCarrinhoUI();
+    atualizarDisplaysIdentificacao();
+
+    // ==========================================================================
+    // 17. MÓDULO DE CHECKOUT — CARD-14
+    //     Pagamento PIX (QR Code + Polling) e Cartão (Simulação de Terminal)
+    // ==========================================================================
+
+    // Estado do checkout
+    const CHECKOUT_STATE = {
+        pedidoId: null,
+        formaPagamento: 'PIX', // 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO'
+        pixTimer: null,
+        pixPollingTimer: null,
+        pixSegundosRestantes: 300,
+        pixSegundosTotal: 300,
+        confirmacaoRedirectTimer: null
+    };
+
+    // Elementos do checkout
+    const checkoutItemsList   = document.getElementById('checkout-items-list');
+    const checkoutSubtotal    = document.getElementById('checkout-subtotal');
+    const checkoutTotal       = document.getElementById('checkout-total');
+    const checkoutClientInfo  = document.getElementById('checkout-client-info');
+    const checkoutNomeCliente = document.getElementById('checkout-nome-cliente');
+    const terminalAmount      = document.getElementById('terminal-amount');
+    const pixValorLabel       = document.getElementById('pix-valor-label');
+    const btnCheckoutBack     = document.getElementById('btn-checkout-back');
+    const btnNovoPedido       = document.getElementById('btn-novo-pedido');
+
+    // Botões de forma de pagamento
+    const paymentMethodCards  = document.querySelectorAll('.payment-method-card');
+    const panelPix            = document.getElementById('panel-pix');
+    const panelCartao         = document.getElementById('panel-cartao');
+
+    // Elementos do painel PIX
+    const pixLoading          = document.getElementById('pix-loading');
+    const pixReady            = document.getElementById('pix-ready');
+    const pixExpired          = document.getElementById('pix-expired');
+    const pixQrImage          = document.getElementById('pix-qr-image');
+    const pixCopiaCola        = document.getElementById('pix-copia-cola');
+    const btnCopyPix          = document.getElementById('btn-copy-pix');
+    const pixTimerCircle      = document.getElementById('pix-timer-circle');
+    const pixTimerLabel       = document.getElementById('pix-timer-label');
+    const pixStatusText       = document.getElementById('pix-status-text');
+    const btnReemitirPix      = document.getElementById('btn-reemitir-pix');
+
+    // Elementos do painel Cartão
+    const btnSimPay           = document.getElementById('btn-sim-pay');
+    const cardProcessing      = document.getElementById('card-processing');
+    const cardSimActions      = document.getElementById('card-sim-actions');
+
+    // Elementos da confirmação
+    const senhaDígits         = document.getElementById('senha-digits');
+    const ticketPedidoId      = document.getElementById('ticket-pedido-id');
+    const ticketFormaPgto     = document.getElementById('ticket-forma-pagamento');
+    const ticketValorTotal    = document.getElementById('ticket-valor-total');
+    const ticketNomeCliente   = document.getElementById('ticket-nome-cliente');
+    const ticketRowCliente    = document.getElementById('ticket-row-cliente');
+    const ticketHorario       = document.getElementById('ticket-horario');
+    const ticketItemsList     = document.getElementById('ticket-items-list');
+    const redirectCountdown   = document.getElementById('redirect-countdown');
+
+    /**
+     * Inicializa a tela de checkout: renderiza o resumo e cria o pedido no backend.
+     */
+    async function inicializarCheckout() {
+        renderizarResumoCheckout();
+        await criarPedidoEIniciarPagamento();
+    }
+
+    /**
+     * Renderiza os itens e totais no resumo do checkout.
+     */
+    function renderizarResumoCheckout() {
+        if (!checkoutItemsList) return;
+
+        const total = calcularTotalCarrinho();
+        checkoutItemsList.innerHTML = '';
+
+        STATE.carrinho.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'checkout-item';
+
+            const opcoes = [
+                ...(item.adicionaisNomes || []),
+                ...(item.remocoesNomes || []).map(r => `Sem ${r}`),
+                ...(item.tamanhoBatataNome ? [item.tamanhoBatataNome] : []),
+                ...(item.bebidaNome ? [item.bebidaNome] : [])
+            ].join(', ');
+
+            li.innerHTML = `
+                <div class="checkout-item-info">
+                    <div>
+                        <span class="checkout-item-qty">${item.quantidade}x</span>
+                        <span class="checkout-item-name">${item.nome}</span>
+                    </div>
+                    ${opcoes ? `<div class="checkout-item-opcoes">${opcoes}</div>` : ''}
+                    ${item.observacoes ? `<div class="checkout-item-opcoes">📝 ${item.observacoes}</div>` : ''}
+                </div>
+                <span class="checkout-item-subtotal">R$ ${formatarMoeda(item.subtotal)}</span>
+            `;
+            checkoutItemsList.appendChild(li);
+        });
+
+        if (checkoutSubtotal) checkoutSubtotal.textContent = `R$ ${formatarMoeda(total)}`;
+        if (checkoutTotal) checkoutTotal.textContent = `R$ ${formatarMoeda(total)}`;
+        if (terminalAmount) terminalAmount.textContent = `R$ ${formatarMoeda(total)}`;
+        if (pixValorLabel) pixValorLabel.textContent = `R$ ${formatarMoeda(total)}`;
+
+        // Exibir nome do cliente se informado
+        if (STATE.nomeCliente && checkoutClientInfo && checkoutNomeCliente) {
+            checkoutNomeCliente.textContent = `👤 ${STATE.nomeCliente}`;
+            checkoutClientInfo.style.display = 'block';
+        } else if (checkoutClientInfo) {
+            checkoutClientInfo.style.display = 'none';
+        }
+    }
+
+    /**
+     * Cria o pedido no backend e inicia o fluxo de pagamento conforme a forma escolhida.
+     */
+    async function criarPedidoEIniciarPagamento() {
+        // Montar DTO do pedido
+        const itensDTO = STATE.carrinho.map(item => ({
+            produtoId: item.produtoId,
+            quantidade: item.quantidade,
+            adicionaisIds: item.adicionaisIds || [],
+            remocoesIds: item.remocoesIds || [],
+            tamanhoBatataId: item.tamanhoBatataId || null,
+            bebidaId: item.bebidaId || null,
+            observacoes: item.observacoes || null
+        }));
+
+        const novoPedidoDTO = {
+            itens: itensDTO,
+            formaPagamento: CHECKOUT_STATE.formaPagamento,
+            nomeCliente: STATE.nomeCliente.trim() || null,
+            cpfCliente: STATE.cpfCliente ? formatarCpf(STATE.cpfCliente) : null
+        };
+
+        try {
+            const response = await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(novoPedidoDTO)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || `Erro ${response.status} ao criar pedido.`);
+            }
+
+            const pedidoResponse = await response.json();
+            CHECKOUT_STATE.pedidoId = pedidoResponse.id;
+
+            // Iniciar fluxo de pagamento conforme método selecionado
+            if (CHECKOUT_STATE.formaPagamento === 'PIX') {
+                await iniciarFluxoPix();
+            } else {
+                exibirPainelCartao();
+            }
+        } catch (error) {
+            console.error('Erro ao criar pedido:', error);
+            showToast('Erro ao processar pedido ❌', error.message || 'Tente novamente ou chame um atendente.');
+        }
+    }
+
+    // --------------------------------------------------------------------------
+    // FLUXO PIX
+    // --------------------------------------------------------------------------
+
+    /**
+     * Solicita a geração da cobrança PIX e exibe o QR Code.
+     */
+    async function iniciarFluxoPix() {
+        mostrarEstadoPix('loading');
+
+        try {
+            const response = await fetch(`/api/pagamentos/${CHECKOUT_STATE.pedidoId}/pix`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const pixData = await response.json();
+            exibirQrCodePix(pixData);
+            iniciarTimerPix(pixData.segundosRestantes || 300);
+            iniciarPollingPix();
+        } catch (error) {
+            console.error('Erro ao gerar PIX:', error);
+            showToast('Erro ao gerar PIX ❌', 'Não foi possível gerar o QR Code. Tente outro método de pagamento.');
+            mostrarEstadoPix('expired');
+        }
+    }
+
+    /**
+     * Exibe o QR Code e os dados do PIX na tela.
+     */
+    function exibirQrCodePix(pixData) {
+        if (pixQrImage && pixData.qrCodeDataUri) {
+            pixQrImage.src = pixData.qrCodeDataUri;
+        }
+        if (pixCopiaCola) {
+            pixCopiaCola.value = pixData.payloadEmv || '';
+        }
+        mostrarEstadoPix('ready');
+    }
+
+    /**
+     * Inicia o timer regressivo do PIX (300s = 5 min).
+     */
+    function iniciarTimerPix(segundos) {
+        CHECKOUT_STATE.pixSegundosRestantes = segundos;
+        CHECKOUT_STATE.pixSegundosTotal = segundos;
+        atualizarDisplayTimerPix(segundos);
+
+        if (CHECKOUT_STATE.pixTimer) clearInterval(CHECKOUT_STATE.pixTimer);
+        CHECKOUT_STATE.pixTimer = setInterval(() => {
+            CHECKOUT_STATE.pixSegundosRestantes -= 1;
+            atualizarDisplayTimerPix(CHECKOUT_STATE.pixSegundosRestantes);
+
+            if (CHECKOUT_STATE.pixSegundosRestantes <= 0) {
+                clearInterval(CHECKOUT_STATE.pixTimer);
+                pararPollingPix();
+                mostrarEstadoPix('expired');
+            }
+        }, 1000);
+    }
+
+    /**
+     * Atualiza o label e o arco SVG do timer circular.
+     */
+    function atualizarDisplayTimerPix(segundos) {
+        if (!pixTimerLabel || !pixTimerCircle) return;
+
+        const minutos = Math.floor(Math.max(0, segundos) / 60);
+        const secs = Math.max(0, segundos) % 60;
+        pixTimerLabel.textContent = `${minutos}:${String(secs).padStart(2, '0')}`;
+
+        // Arco SVG: circumference = 2π×26 ≈ 163.4
+        const circumference = 163.4;
+        const progresso = Math.max(0, segundos) / CHECKOUT_STATE.pixSegundosTotal;
+        pixTimerCircle.style.strokeDashoffset = circumference * (1 - progresso);
+
+        // Cor de alerta nos últimos 60s
+        if (segundos <= 60) {
+            pixTimerCircle.classList.add('expiring');
+        } else {
+            pixTimerCircle.classList.remove('expiring');
+        }
+    }
+
+    /**
+     * Polling a cada 4s para verificar se o PIX foi pago.
+     */
+    function iniciarPollingPix() {
+        if (CHECKOUT_STATE.pixPollingTimer) clearInterval(CHECKOUT_STATE.pixPollingTimer);
+        CHECKOUT_STATE.pixPollingTimer = setInterval(async () => {
+            if (!CHECKOUT_STATE.pedidoId) { pararPollingPix(); return; }
+            try {
+                const response = await fetch(`/api/pagamentos/${CHECKOUT_STATE.pedidoId}/status`);
+                if (!response.ok) return;
+                const statusData = await response.json();
+                if (statusData.pago === true) {
+                    pararPollingPix();
+                    clearInterval(CHECKOUT_STATE.pixTimer);
+                    exibirConfirmacao(statusData);
+                }
+            } catch (e) {
+                console.warn('Polling PIX: erro de rede.', e);
+            }
+        }, 4000);
+    }
+
+    function pararPollingPix() {
+        if (CHECKOUT_STATE.pixPollingTimer) {
+            clearInterval(CHECKOUT_STATE.pixPollingTimer);
+            CHECKOUT_STATE.pixPollingTimer = null;
+        }
+    }
+
+    /**
+     * Controla qual sub-estado do painel PIX está visível.
+     */
+    function mostrarEstadoPix(estado) {
+        // estado: 'loading' | 'ready' | 'expired'
+        if (pixLoading) pixLoading.classList.toggle('hidden', estado !== 'loading');
+        if (pixReady)   pixReady.classList.toggle('hidden',   estado !== 'ready');
+        if (pixExpired) pixExpired.classList.toggle('hidden', estado !== 'expired');
+    }
+
+    // Copiar código PIX
+    if (btnCopyPix) {
+        btnCopyPix.addEventListener('click', () => {
+            const codigo = pixCopiaCola ? pixCopiaCola.value : '';
+            if (!codigo) return;
+            navigator.clipboard.writeText(codigo)
+                .then(() => {
+                    btnCopyPix.textContent = '✅ Copiado!';
+                    btnCopyPix.classList.add('copied');
+                    setTimeout(() => {
+                        btnCopyPix.textContent = '📋 Copiar';
+                        btnCopyPix.classList.remove('copied');
+                    }, 2500);
+                })
+                .catch(() => {
+                    pixCopiaCola.select();
+                    document.execCommand('copy');
+                    showToast('Código copiado!', 'Cole no seu app de banco para pagar.');
+                });
+        });
+    }
+
+    // Reemitir PIX expirado
+    if (btnReemitirPix) {
+        btnReemitirPix.addEventListener('click', async () => {
+            if (!CHECKOUT_STATE.pedidoId) return;
+            await iniciarFluxoPix();
+        });
+    }
+
+    // --------------------------------------------------------------------------
+    // FLUXO CARTÃO
+    // --------------------------------------------------------------------------
+
+    /**
+     * Exibe e ativa o painel da maquininha de cartão.
+     */
+    function exibirPainelCartao() {
+        // Já visível por seleção do método; nada extra para gerar
+    }
+
+    /**
+     * Simula aprovação da transação no terminal de cartão.
+     */
+    if (btnSimPay) {
+        btnSimPay.addEventListener('click', async () => {
+            if (!CHECKOUT_STATE.pedidoId) {
+                showToast('Aguarde ⚠️', 'O pedido ainda está sendo processado. Tente novamente em instantes.');
+                return;
+            }
+
+            if (cardSimActions) cardSimActions.classList.add('hidden');
+            if (cardProcessing) cardProcessing.classList.remove('hidden');
+
+            const dto = {
+                formaPagamento: CHECKOUT_STATE.formaPagamento,
+                bandeira: 'VISA',
+                tipoOperacao: 'APROXIMACAO'
+            };
+
+            try {
+                const response = await fetch(`/api/pagamentos/${CHECKOUT_STATE.pedidoId}/cartao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const statusData = await response.json();
+                exibirConfirmacao(statusData);
+            } catch (error) {
+                console.error('Erro no pagamento com cartão:', error);
+                showToast('Erro no pagamento ❌', 'Transação recusada. Tente outro cartão ou PIX.');
+                if (cardSimActions) cardSimActions.classList.remove('hidden');
+                if (cardProcessing) cardProcessing.classList.add('hidden');
+            }
+        });
+    }
+
+    // --------------------------------------------------------------------------
+    // SELEÇÃO DE MÉTODO DE PAGAMENTO
+    // --------------------------------------------------------------------------
+    paymentMethodCards.forEach(card => {
+        card.addEventListener('click', () => {
+            if (!card.id) return;
+            const metodo = card.getAttribute('data-metodo');
+            CHECKOUT_STATE.formaPagamento = metodo;
+
+            paymentMethodCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            // Trocar painel visível
+            const isPix = (metodo === 'PIX');
+            if (panelPix)    panelPix.classList.toggle('hidden', !isPix);
+            if (panelCartao) panelCartao.classList.toggle('hidden', isPix);
+
+            // Se mudou para PIX e não há QR Code ainda (pedido já criado), gerar
+            if (isPix && CHECKOUT_STATE.pedidoId && pixLoading && !pixLoading.classList.contains('hidden')) {
+                // Já carregando — aguardar
+            } else if (isPix && CHECKOUT_STATE.pedidoId && pixExpired && !pixExpired.classList.contains('hidden')) {
+                // Expirou — reemitir automaticamente
+                iniciarFluxoPix();
+            }
+
+            // Atualizar o valor no terminal de cartão
+            const total = calcularTotalCarrinho();
+            if (terminalAmount) terminalAmount.textContent = `R$ ${formatarMoeda(total)}`;
+
+            resetInactivityTimer();
+        });
+    });
+
+    // Voltar da tela de checkout para identificação
+    if (btnCheckoutBack) {
+        btnCheckoutBack.addEventListener('click', () => {
+            pararPollingPix();
+            if (CHECKOUT_STATE.pixTimer) clearInterval(CHECKOUT_STATE.pixTimer);
+            transitionToScreen('identification');
+        });
+    }
+
+    // --------------------------------------------------------------------------
+    // TELA DE CONFIRMAÇÃO / SENHA DIGITAL
+    // --------------------------------------------------------------------------
+
+    /**
+     * Exibe a tela de confirmação com a senha digital do pedido.
+     * @param {Object} statusData — PagamentoResponseDTO ou PedidoResponseDTO do backend.
+     */
+    function exibirConfirmacao(statusData) {
+        // Preencher dados do ticket
+        const senha = statusData.numeroSenha || statusData.senhaFormatada || '---';
+        const senhaStr = String(statusData.numeroSenha || '0').padStart(3, '0');
+        if (senhaDígits) senhaDígits.textContent = senhaStr;
+
+        if (ticketPedidoId) {
+            ticketPedidoId.textContent = statusData.pedidoId
+                ? `#${statusData.pedidoId}`
+                : (statusData.id ? `#${statusData.id}` : '—');
+        }
+
+        const formaPgtoLabel = {
+            'PIX': 'PIX ✅',
+            'CARTAO_CREDITO': 'Crédito ✅',
+            'CARTAO_DEBITO': 'Débito ✅',
+            'DINHEIRO': 'Dinheiro ✅'
+        };
+        if (ticketFormaPgto) {
+            ticketFormaPgto.textContent = formaPgtoLabel[statusData.formaPagamento] || (statusData.formaPagamento || 'Pago ✅');
+        }
+
+        const valorTotal = statusData.valorTotal || statusData.valorPago || calcularTotalCarrinho();
+        if (ticketValorTotal) {
+            ticketValorTotal.textContent = `R$ ${formatarMoeda(valorTotal)}`;
+        }
+
+        // Nome do cliente
+        const nome = STATE.nomeCliente.trim() || statusData.nomeCliente;
+        if (nome && ticketNomeCliente && ticketRowCliente) {
+            ticketNomeCliente.textContent = nome;
+            ticketRowCliente.style.display = 'flex';
+        } else if (ticketRowCliente) {
+            ticketRowCliente.style.display = 'none';
+        }
+
+        // Horário
+        if (ticketHorario) {
+            ticketHorario.textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Itens do ticket
+        renderizarItensSenha();
+
+        // Navegar para a tela de confirmação
+        transitionToScreen('confirmacao');
+
+        // Countdown de redirecionamento (15s)
+        iniciarCountdownRedirecionamento();
+    }
+
+    /**
+     * Renderiza a lista de itens compacta no ticket de senha.
+     */
+    function renderizarItensSenha() {
+        if (!ticketItemsList) return;
+        ticketItemsList.innerHTML = '';
+
+        STATE.carrinho.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'ticket-item';
+            li.innerHTML = `
+                <span class="ticket-item-name">
+                    <span class="ticket-item-qty">${item.quantidade}x</span>
+                    ${item.nome}
+                </span>
+                <span class="ticket-item-price">R$ ${formatarMoeda(item.subtotal)}</span>
+            `;
+            ticketItemsList.appendChild(li);
+        });
+    }
+
+    /**
+     * Countdown de 15s para retornar automaticamente à tela de boas-vindas.
+     */
+    function iniciarCountdownRedirecionamento() {
+        if (CHECKOUT_STATE.confirmacaoRedirectTimer) {
+            clearInterval(CHECKOUT_STATE.confirmacaoRedirectTimer);
+        }
+        let segundos = 15;
+        if (redirectCountdown) redirectCountdown.textContent = segundos;
+
+        CHECKOUT_STATE.confirmacaoRedirectTimer = setInterval(() => {
+            segundos -= 1;
+            if (redirectCountdown) redirectCountdown.textContent = segundos;
+            if (segundos <= 0) {
+                clearInterval(CHECKOUT_STATE.confirmacaoRedirectTimer);
+                resetTotemToWelcome();
+            }
+        }, 1000);
+    }
+
+    // Botão "Fazer Novo Pedido"
+    if (btnNovoPedido) {
+        btnNovoPedido.addEventListener('click', () => {
+            if (CHECKOUT_STATE.confirmacaoRedirectTimer) {
+                clearInterval(CHECKOUT_STATE.confirmacaoRedirectTimer);
+            }
+            resetTotemToWelcome();
         });
     }
 
