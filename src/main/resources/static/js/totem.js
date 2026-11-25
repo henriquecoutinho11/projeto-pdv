@@ -2171,4 +2171,153 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicialização da UI do Carrinho e Identificação
     atualizarCarrinhoUI();
     atualizarDisplaysIdentificacao();
+
+    // --------------------------------------------------------------------------
+    // 25. SINCRONIZAÇÃO EM TEMPO REAL COM O PAINEL ADMINISTRATIVO (CARD-16)
+    // --------------------------------------------------------------------------
+    const totemSyncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('antunes-pdv-sync') : null;
+
+    function escapeHtmlTotem(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    async function sincronizarCardapioComServidor() {
+        try {
+            const response = await fetch('/api/admin/produtos');
+            if (!response.ok) return;
+            const produtosServidor = await response.json();
+
+            const mapaProdutos = new Map();
+            produtosServidor.forEach(p => mapaProdutos.set(String(p.id), p));
+
+            // 1. Atualizar ou ocultar cards existentes no DOM
+            document.querySelectorAll('.product-card').forEach(card => {
+                const prodId = card.getAttribute('data-product-id');
+                const p = mapaProdutos.get(prodId);
+
+                if (!p || p.ativo === false) {
+                    // Produto pausado ou desativado no Admin: remove/oculta imediatamente da vitrine do totem
+                    card.classList.add('is-paused-by-admin');
+                    card.style.display = 'none';
+                } else {
+                    card.classList.remove('is-paused-by-admin');
+                    card.style.display = '';
+
+                    // Atualizar estoque e badges
+                    card.setAttribute('data-stock', String(p.quantidadeEstoque || 0));
+                    const isZeroStock = (p.quantidadeEstoque || 0) <= 0;
+                    card.classList.toggle('is-out-of-stock', isZeroStock);
+
+                    // Atualizar título, preço e descrição se foram alterados
+                    const titleEl = card.querySelector('.product-title');
+                    if (titleEl && p.nome) titleEl.textContent = p.nome;
+
+                    const priceEl = card.querySelector('.product-price-value');
+                    if (priceEl && p.preco != null) priceEl.textContent = formatarMoeda(p.preco);
+
+                    const descEl = card.querySelector('.product-desc');
+                    if (descEl && p.descricao) descEl.textContent = p.descricao;
+                }
+            });
+
+            // 2. Inserir novos produtos cadastrados que ainda não estão no DOM
+            produtosServidor.forEach(p => {
+                if (p.ativo === true) {
+                    const cardExistente = document.querySelector(`.product-card[data-product-id="${p.id}"]`);
+                    if (!cardExistente) {
+                        const catSection = document.getElementById(`cat-section-${p.categoriaId}`);
+                        if (catSection) {
+                            const grid = catSection.querySelector('.products-grid');
+                            if (grid) {
+                                const newCard = criarCardProdutoDinamico(p);
+                                grid.appendChild(newCard);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Recalcular visibilidade das seções de categoria vazias
+            document.querySelectorAll('.menu-category-section').forEach(section => {
+                const hasVisible = Array.from(section.querySelectorAll('.product-card'))
+                    .some(c => c.style.display !== 'none' && !c.classList.contains('is-paused-by-admin'));
+                section.style.display = hasVisible ? '' : 'none';
+            });
+        } catch (e) {
+            // Silencioso se o servidor estiver temporariamente ocupado
+        }
+    }
+
+    function criarCardProdutoDinamico(p) {
+        const isOutOfStock = (p.quantidadeEstoque || 0) <= 0;
+        const article = document.createElement('article');
+        article.className = `product-card ${isOutOfStock ? 'is-out-of-stock' : ''}`;
+        article.setAttribute('data-product-id', p.id);
+        article.setAttribute('data-category-id', p.categoriaId);
+        article.setAttribute('data-badge', p.badge || '');
+        article.setAttribute('data-stock', p.quantidadeEstoque || 0);
+
+        article.innerHTML = `
+            <div class="product-badge-wrapper">
+                ${p.badge ? `<span class="product-badge">${escapeHtmlTotem(p.badge)}</span>` : ''}
+            </div>
+            <div class="product-image-box">
+                <img src="${p.imagemUrl || '/img/burger-hero.svg'}" alt="${escapeHtmlTotem(p.nome)}" class="product-art" onerror="this.src='/img/burger-hero.svg'">
+            </div>
+            <div class="product-details">
+                <h4 class="product-title">${escapeHtmlTotem(p.nome)}</h4>
+                <p class="product-desc">${escapeHtmlTotem(p.descricao || '')}</p>
+                <div class="product-footer">
+                    <div class="product-price">
+                        <span class="currency">R$</span>
+                        <span class="product-price-value">${formatarMoeda(p.preco || 0)}</span>
+                    </div>
+                    <button type="button" class="btn btn-gold btn-sm btn-add-product" aria-label="Adicionar ${escapeHtmlTotem(p.nome)} ao pedido">
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        article.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (article.classList.contains('is-out-of-stock')) {
+                showToast('Produto Esgotado 🚫', 'Este item está temporariamente indisponível.');
+            } else {
+                openCustomizationModal(article);
+            }
+        });
+
+        const btnAdd = article.querySelector('.btn-add-product');
+        if (btnAdd) {
+            btnAdd.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (article.classList.contains('is-out-of-stock')) {
+                    showToast('Produto Esgotado 🚫', 'Este item está temporariamente indisponível.');
+                } else {
+                    openCustomizationModal(article);
+                }
+            });
+        }
+
+        return article;
+    }
+
+    if (totemSyncChannel) {
+        totemSyncChannel.onmessage = (event) => {
+            const data = event.data;
+            if (data && data.type === 'PRODUCT_CATALOG_CHANGED') {
+                sincronizarCardapioComServidor();
+            }
+        };
+    }
+
+    // Sincronização periódica a cada 5 segundos
+    setInterval(sincronizarCardapioComServidor, 5000);
 });

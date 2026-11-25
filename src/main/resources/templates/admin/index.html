@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antunes Lanches - Painel Administrativo</title>
+
+    <!-- Google Fonts Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Design System Antunes Lanches -->
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/logo.svg}">
+</head>
+<body class="admin-body">
+
+    <!-- ====================================================================
+         CABEÇALHO EXECUTIVO DO PAINEL ADMINISTRATIVO
+         ==================================================================== -->
+    <header class="admin-header">
+        <div class="admin-brand-box">
+            <img th:src="@{/img/logo.svg}" alt="Logo Antunes Lanches" class="admin-logo">
+            <div>
+                <h1 class="admin-title">ANTUNES <span>ADMIN</span></h1>
+                <p class="admin-subtitle">Gestão de Cardápio, Controle de Estoque &amp; Inteligência de Negócio</p>
+            </div>
+        </div>
+
+        <!-- Links Rápidos entre Telas do Sistema -->
+        <nav class="admin-quick-links" aria-label="Navegação rápida do ecossistema">
+            <a th:href="@{/totem}" class="quick-link-btn" title="Abrir Totem de Autoatendimento" target="_blank">
+                <span class="icon">🍔</span> Totem
+            </a>
+            <a th:href="@{/kds}" class="quick-link-btn" title="Abrir Cozinha (KDS)" target="_blank">
+                <span class="icon">🍳</span> Cozinha (KDS)
+            </a>
+            <a th:href="@{/painel-senhas}" class="quick-link-btn" title="Abrir Painel de TV de Senhas" target="_blank">
+                <span class="icon">📺</span> TV Salão
+            </a>
+        </nav>
+
+        <!-- Status do Sistema & Relógio -->
+        <div class="admin-meta-box">
+            <div class="admin-status-pill" id="admin-sync-pill" title="Conexão com servidor em tempo real">
+                <span class="status-dot"></span>
+                <span id="admin-sync-text">Sistema Online</span>
+            </div>
+            <div class="admin-clock" id="admin-clock">--:--:--</div>
+        </div>
+    </header>
+
+    <!-- ====================================================================
+         BARRA DE NAVEGAÇÃO DE ABAS ADMINISTRATIVAS
+         ==================================================================== -->
+    <nav class="admin-tabs-nav" aria-label="Abas do Painel Administrativo">
+        <div class="tabs-container">
+            <button type="button" class="admin-tab-btn active" data-tab="dashboard">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="9"></rect>
+                    <rect x="14" y="3" width="7" height="5"></rect>
+                    <rect x="14" y="12" width="7" height="9"></rect>
+                    <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+                Dashboard Analítico
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="cardapio">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                Gestão de Cardápio &amp; Estoque
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="fechamento">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Fechamento de Caixa Diário
+            </button>
+        </div>
+    </nav>
+
+    <!-- ====================================================================
+         CONTEÚDO PRINCIPAL DO PAINEL
+         ==================================================================== -->
+    <main class="admin-main">
+
+        <!-- ================================================================
+             ABA 1: DASHBOARD ANALÍTICO DE MÉTRICAS E FATURAMENTO
+             ================================================================ -->
+        <section id="tab-dashboard" class="admin-tab-section active" aria-label="Dashboard Analítico">
+            
+            <!-- Barra de Controles e Seletor de Período Dinâmico -->
+            <div class="dashboard-controls-bar">
+                <div class="period-selectors" role="group" aria-label="Seletor de Período">
+                    <span class="period-label">Período:</span>
+                    <button type="button" class="period-btn active" data-period="hoje">Hoje</button>
+                    <button type="button" class="period-btn" data-period="7dias">Últimos 7 dias</button>
+                    <button type="button" class="period-btn" data-period="mes">Este Mês</button>
+                    <button type="button" class="period-btn" data-period="custom" id="btn-period-custom">Personalizado</button>
+                </div>
+
+                <!-- Formulário de Data Customizada (oculto por padrão) -->
+                <div class="custom-date-picker hidden" id="custom-date-box">
+                    <div class="date-field">
+                        <label for="input-date-start">Início:</label>
+                        <input type="date" id="input-date-start" class="admin-date-input">
+                    </div>
+                    <div class="date-field">
+                        <label for="input-date-end">Fim:</label>
+                        <input type="date" id="input-date-end" class="admin-date-input">
+                    </div>
+                    <button type="button" class="btn btn-gold btn-sm" id="btn-apply-custom-date">Aplicar</button>
+                </div>
+
+                <div class="dashboard-actions">
+                    <span class="last-update-text" id="dashboard-last-update">Atualizado agora</span>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-dashboard" title="Atualizar métricas">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARDS DE KPIS PRINCIPAIS NO TOPO -->
+            <div class="kpi-grid">
+                <!-- KPI 1: Faturamento Total -->
+                <div class="kpi-card kpi-card-faturamento">
+                    <div class="kpi-header">
+                        <span class="kpi-icon-badge">💰</span>
+                        <span class="kpi-title">Faturamento Total</span>
+                    </div>
+                    <div class="kpi-value-wrapper">
+                        <span class="kpi-currency">R$</span>
+                        <span class="kpi-value" id="kpi-faturamento" th:text="${resumo != null && resumo.totalFaturado != null ? #numbers.formatDecimal(resumo.totalFaturado, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</span>
+                    </div>
+                    <div class="kpi-footer">
+                        <span class="kpi-badge badge-gold" id="kpi-periodo-tag">Vendas Aprovadas</span>
+                        <span class="kpi-subtext">No período selecionado</span>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Total de Pedidos Concluídos -->
+                <div class="kpi-card kpi-card-pedidos">
+                    <div class="kpi-header">
+                        <span class="kpi-icon-badge">📦</span>
+                        <span class="kpi-title">Pedidos Concluídos</span>
+                    </div>
+                    <div class="kpi-value-wrapper">
+                        <span class="kpi-value" id="kpi-pedidos" th:text="${resumo != null && resumo.totalPedidos != null ? resumo.totalPedidos : '0'}">0</span>
+                    </div>
+                    <div class="kpi-footer">
+                        <span class="kpi-badge badge-green">Concluídos &amp; Pagos</span>
+                        <span class="kpi-subtext">Operação KDS</span>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Tempo Médio de Espera na Cozinha -->
+                <div class="kpi-card kpi-card-tempo">
+                    <div class="kpi-header">
+                        <span class="kpi-icon-badge">⏱️</span>
+                        <span class="kpi-title">Tempo Médio na Cozinha</span>
+                    </div>
+                    <div class="kpi-value-wrapper">
+                        <span class="kpi-value" id="kpi-tempo" th:text="${resumo != null && resumo.tempoMedioPreparoMinutos != null ? #numbers.formatDecimal(resumo.tempoMedioPreparoMinutos, 1, 'POINT', 1, 'COMMA') + ' min' : '0,0 min'}">0,0 min</span>
+                    </div>
+                    <div class="kpi-footer">
+                        <span class="kpi-badge badge-blue">SLA Cozinha</span>
+                        <span class="kpi-subtext">Preparo e Expedição</span>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Ticket Médio por Pedido -->
+                <div class="kpi-card kpi-card-ticket">
+                    <div class="kpi-header">
+                        <span class="kpi-icon-badge">🍔</span>
+                        <span class="kpi-title">Ticket Médio</span>
+                    </div>
+                    <div class="kpi-value-wrapper">
+                        <span class="kpi-currency">R$</span>
+                        <span class="kpi-value" id="kpi-ticket" th:text="${resumo != null && resumo.ticketMedio != null ? #numbers.formatDecimal(resumo.ticketMedio, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</span>
+                    </div>
+                    <div class="kpi-footer">
+                        <span class="kpi-badge badge-gold">Média / Cliente</span>
+                        <span class="kpi-subtext">Valor por Pedido</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO DE GRÁFICOS: DISTRIBUIÇÃO DE PAGAMENTOS & TOP 5 MAIS VENDIDOS -->
+            <div class="charts-grid">
+                
+                <!-- Gráfico de Pizza / Rosca: Distribuição de Pagamentos -->
+                <div class="chart-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">💳 Distribuição por Forma de Pagamento</h2>
+                            <p class="panel-subtitle">Participação de PIX, Cartão de Crédito, Débito e Dinheiro no faturamento</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-body">
+                        <div class="donut-chart-container">
+                            <canvas id="paymentDonutCanvas" width="280" height="280" class="donut-canvas"></canvas>
+                            <div class="donut-center-info" id="donut-center-info">
+                                <span class="donut-center-label">Total</span>
+                                <span class="donut-center-val" id="donut-center-total">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Legenda Dinâmica -->
+                        <div class="payment-legend" id="payment-legend">
+                            <!-- Injetado dinamicamente via JS ou exibição vazia -->
+                            <div class="legend-empty-state">Carregando dados de pagamento...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Barras: Top 5 Hambúrgueres Mais Vendidos -->
+                <div class="chart-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">🍔 Top 5 Hambúrgueres &amp; Produtos Mais Vendidos</h2>
+                            <p class="panel-subtitle">Ranking por volume de unidades vendidas e faturamento total</p>
+                        </div>
+                    </div>
+
+                    <div class="chart-body">
+                        <div class="top-products-list" id="top-products-list">
+                            <!-- Injetado dinamicamente via JS ou dados iniciais -->
+                            <div class="top-products-empty" id="top-products-empty">
+                                <p>Carregando ranking de produtos mais vendidos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELA ANALÍTICA RÁPIDA: PAGAMENTOS CONSOLIDADOS NO PERÍODO -->
+            <div class="admin-card-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">📊 Detalhamento Financeiro por Método de Pagamento</h2>
+                        <p class="panel-subtitle">Consolidado de transações, pedidos e percentual de participação</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table" id="table-pagamentos-resumo">
+                        <thead>
+                            <tr>
+                                <th>Forma de Pagamento</th>
+                                <th class="text-center">Quantidade de Pedidos</th>
+                                <th class="text-right">Total Faturado (R$)</th>
+                                <th class="text-right">% do Faturamento</th>
+                                <th>Participação Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pagamentos-resumo">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">Carregando dados de fechamento...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================
+             ABA 2: GESTÃO DE CARDÁPIO E CONTROLE DE ESTOQUE
+             ================================================================ -->
+        <section id="tab-cardapio" class="admin-tab-section" aria-label="Gestão de Cardápio e Estoque">
+            
+            <!-- Barra Superior de Ferramentas & Filtros -->
+            <div class="catalog-toolbar">
+                <div class="toolbar-left">
+                    <button type="button" class="btn btn-gold btn-add-product" id="btn-open-create-product">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Novo Produto
+                    </button>
+                    
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="admin-search-products" class="admin-search-input" placeholder="Buscar por nome, ingrediente ou ID..." autocomplete="off">
+                        <button type="button" id="btn-clear-product-search" class="btn-clear-input hidden">✕</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <!-- Filtro por Categoria -->
+                    <div class="filter-select-wrapper">
+                        <label for="filter-categoria" class="filter-label">Categoria:</label>
+                        <select id="filter-categoria" class="admin-select">
+                            <option value="ALL">Todas as Categorias</option>
+                            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}">Hambúrgueres</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro por Status -->
+                    <div class="filter-select-wrapper">
+                        <label for="filter-status" class="filter-label">Status:</label>
+                        <select id="filter-status" class="admin-select">
+                            <option value="ALL">Todos os Status</option>
+                            <option value="ATIVO">Ativos no Totem</option>
+                            <option value="PAUSADO">Pausados / Inativos</option>
+                            <option value="ESTOQUE_BAIXO">Estoque Baixo (&le; 10)</option>
+                            <option value="ESGOTADO">Esgotados (0 em Estoque)</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn btn-outline btn-icon" id="btn-refresh-products" title="Atualizar listagem de produtos">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumo Rápido da Contagem -->
+            <div class="products-counter-bar">
+                <span id="products-counter-text">Carregando produtos...</span>
+                <div class="legend-pills">
+                    <span class="legend-pill"><span class="dot dot-green"></span> Em Estoque</span>
+                    <span class="legend-pill"><span class="dot dot-yellow"></span> Estoque Baixo</span>
+                    <span class="legend-pill"><span class="dot dot-red"></span> Esgotado</span>
+                    <span class="legend-pill"><span class="dot dot-gray"></span> Pausado no Totem</span>
+                </div>
+            </div>
+
+            <!-- TABELA RESPONSIVA DE PRODUTOS & ESTOQUE -->
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table" id="table-products">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Foto</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th class="text-right">Preço de Venda</th>
+                                <th class="text-center">Estoque Atual</th>
+                                <th class="text-center">Status Totem</th>
+                                <th class="text-center" style="width: 240px;">Ações Rápidas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-products">
+                            <!-- Renderização Thymeleaf Inicial (Server-Side) -->
+                            <tr th:each="prod : ${produtos}" th:data-id="${prod.id}" th:data-categoria-id="${prod.categoriaId}" th:data-ativo="${prod.ativo}" th:data-estoque="${prod.quantidadeEstoque}" class="product-row">
+                                <td class="product-img-cell">
+                                    <div class="table-thumb-box">
+                                        <img th:src="${prod.imagemUrl != null && !prod.imagemUrl.isEmpty() ? prod.imagemUrl : '/img/burger-hero.svg'}" 
+                                             th:alt="${prod.nome}" 
+                                             class="table-product-thumb"
+                                             onerror="this.src='/img/burger-hero.svg'">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="product-name-box">
+                                        <span class="product-row-name" th:text="${prod.nome}">Nome do Produto</span>
+                                        <span class="product-row-id" th:text="'#' + ${prod.id}">#1</span>
+                                    </div>
+                                    <p class="product-row-desc" th:text="${prod.descricao}">Descrição do lanche artesanal</p>
+                                </td>
+                                <td>
+                                    <span class="category-badge" th:text="${prod.categoriaNome != null ? prod.categoriaNome : 'Geral'}">Categoria</span>
+                                </td>
+                                <td class="text-right">
+                                    <span class="price-val" th:text="'R$ ' + ${#numbers.formatDecimal(prod.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="stock-cell-content">
+                                        <span class="stock-badge" 
+                                              th:classappend="${prod.quantidadeEstoque == 0 ? 'stock-empty' : (prod.quantidadeEstoque <= 10 ? 'stock-low' : 'stock-ok')}"
+                                              th:text="${prod.quantidadeEstoque} + ' un'">
+                                            50 un
+                                        </span>
+                                        <button type="button" class="btn-quick-stock" th:data-id="${prod.id}" th:data-name="${prod.nome}" th:data-stock="${prod.quantidadeEstoque}" title="Ajustar estoque rapidamente">
+                                            ✏️
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="status-badge" th:classappend="${prod.ativo ? 'status-active' : 'status-paused'}" th:text="${prod.ativo ? 'Ativo' : 'Pausado'}">
+                                        Ativo
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="table-actions">
+                                        <!-- Botão de Ação Rápida: Pausar Venda / Reativar -->
+                                        <button type="button" 
+                                                class="btn-action-toggle" 
+                                                th:classappend="${prod.ativo ? 'btn-pause' : 'btn-resume'}"
+                                                th:data-id="${prod.id}" 
+                                                th:data-ativo="${prod.ativo}"
+                                                th:title="${prod.ativo ? 'Pausar venda imediatamente no Totem' : 'Reativar venda no Totem'}">
+                                            <span th:text="${prod.ativo ? '⏸️ Pausar' : '▶️ Ativar'}">⏸️ Pausar</span>
+                                        </button>
+
+                                        <!-- Botão Editar -->
+                                        <button type="button" class="btn-action-edit" th:data-id="${prod.id}" title="Editar informações do produto">
+                                            ✏️ Editar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado Vazio para Busca sem Resultados -->
+                <div id="products-empty-state" class="empty-state hidden">
+                    <span class="empty-icon">🔍</span>
+                    <h3>Nenhum produto encontrado</h3>
+                    <p>Nenhum item corresponde aos filtros selecionados. Tente ajustar os termos de busca ou categoria.</p>
+                    <button type="button" class="btn btn-gold btn-sm" id="btn-reset-filters">Limpar Filtros</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================
+             ABA 3: FECHAMENTO DE CAIXA DIÁRIO
+             ================================================================ -->
+        <section id="tab-fechamento" class="admin-tab-section" aria-label="Fechamento de Caixa Diário">
+            <div class="admin-card-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">📑 Fechamento de Caixa Diário Consolidado</h2>
+                        <p class="panel-subtitle">Auditoria de pagamentos e fechamento financeiro do restaurante por dia civil</p>
+                    </div>
+
+                    <div class="fechamento-date-control">
+                        <label for="fechamento-data-input">Data do Fechamento:</label>
+                        <input type="date" id="fechamento-data-input" class="admin-date-input">
+                        <button type="button" class="btn btn-gold btn-sm" id="btn-carregar-fechamento">Consultar</button>
+                    </div>
+                </div>
+
+                <div class="fechamento-cards-grid">
+                    <div class="fechamento-stat-card">
+                        <span class="stat-label">Data de Referência</span>
+                        <span class="stat-value" id="fechamento-data-ref">Hoje</span>
+                    </div>
+                    <div class="fechamento-stat-card">
+                        <span class="stat-label">Total Faturado</span>
+                        <span class="stat-value text-gold" id="fechamento-total-faturado">R$ 0,00</span>
+                    </div>
+                    <div class="fechamento-stat-card">
+                        <span class="stat-label">Total de Pedidos</span>
+                        <span class="stat-value" id="fechamento-total-pedidos">0</span>
+                    </div>
+                    <div class="fechamento-stat-card">
+                        <span class="stat-label">Ticket Médio</span>
+                        <span class="stat-value" id="fechamento-ticket-medio">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="margin-top: var(--spacing-lg);">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Forma de Pagamento</th>
+                                <th class="text-center">Qtd. Transações</th>
+                                <th class="text-right">Valor Total (R$)</th>
+                                <th class="text-right">% Participação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-fechamento-detalhes">
+                            <tr>
+                                <td colspan="4" class="text-center py-4">Consulte uma data para visualizar o fechamento analítico.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="fechamento-footer-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="window.print()">
+                        🖨️ Imprimir Fechamento de Caixa
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ====================================================================
+         MODAL DE CADASTRO E EDIÇÃO DE PRODUTOS
+         ==================================================================== -->
+    <div class="admin-modal-backdrop hidden" id="modal-product-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-product-title">
+        <div class="admin-modal-box">
+            
+            <div class="admin-modal-header">
+                <div>
+                    <h3 class="admin-modal-title" id="modal-product-title">Cadastrar Novo Produto</h3>
+                    <p class="admin-modal-subtitle">Preencha as informações do cardápio e controle de estoque</p>
+                </div>
+                <button type="button" class="btn-close-modal" id="btn-close-product-modal" aria-label="Fechar modal">✕</button>
+            </div>
+
+            <form id="form-product" class="admin-form" novalidate>
+                <input type="hidden" id="product-form-id" name="id">
+
+                <div class="form-grid">
+                    <!-- Nome do Produto -->
+                    <div class="form-group full-width">
+                        <label for="prod-nome" class="form-label required">Nome do Produto</label>
+                        <input type="text" id="prod-nome" class="form-input" placeholder="Ex: Antunes Duplo Bacon Burger" required maxlength="100">
+                        <span class="form-error-msg" id="error-prod-nome"></span>
+                    </div>
+
+                    <!-- Categoria -->
+                    <div class="form-group">
+                        <label for="prod-categoria" class="form-label required">Categoria</label>
+                        <select id="prod-categoria" class="form-select" required>
+                            <option value="">Selecione uma categoria...</option>
+                            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}">Hambúrgueres</option>
+                        </select>
+                        <span class="form-error-msg" id="error-prod-categoria"></span>
+                    </div>
+
+                    <!-- Preço de Venda -->
+                    <div class="form-group">
+                        <label for="prod-preco" class="form-label required">Preço de Venda (R$)</label>
+                        <input type="number" id="prod-preco" class="form-input" placeholder="Ex: 28.90" step="0.01" min="0.01" required>
+                        <span class="form-error-msg" id="error-prod-preco"></span>
+                    </div>
+
+                    <!-- Quantidade em Estoque -->
+                    <div class="form-group">
+                        <label for="prod-estoque" class="form-label required">Estoque Atual (Unidades)</label>
+                        <input type="number" id="prod-estoque" class="form-input" placeholder="Ex: 50" min="0" step="1" required>
+                        <span class="form-error-msg" id="error-prod-estoque"></span>
+                    </div>
+
+                    <!-- Status Ativo / Inativo no Totem -->
+                    <div class="form-group">
+                        <label class="form-label">Status no Totem</label>
+                        <div class="toggle-container">
+                            <label class="switch">
+                                <input type="checkbox" id="prod-ativo" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="toggle-status-label" id="label-prod-ativo">Ativo (Visível no Totem)</span>
+                        </div>
+                    </div>
+
+                    <!-- URL da Foto e Preview -->
+                    <div class="form-group full-width">
+                        <label for="prod-imagem" class="form-label">URL da Foto / Imagem</label>
+                        <div class="image-input-row">
+                            <input type="text" id="prod-imagem" class="form-input" placeholder="/img/burger-hero.svg ou https://...">
+                            <div class="image-preview-box">
+                                <img id="prod-image-preview" src="/img/burger-hero.svg" alt="Preview" onerror="this.src='/img/burger-hero.svg'">
+                            </div>
+                        </div>
+                        <div class="image-shortcuts">
+                            <span class="shortcuts-label">Atalhos rápidos de imagem:</span>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/burger-hero.svg">🍔 Hambúrguer</button>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/combo-hero.svg">⭐ Combo</button>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/fries.svg">🍟 Batata</button>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/drink.svg">🥤 Bebida</button>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/shake-hero.svg">🍦 Shake</button>
+                            <button type="button" class="btn-img-shortcut" data-src="/img/onion-rings.svg">🧅 Onions</button>
+                        </div>
+                        <span class="form-error-msg" id="error-prod-imagem"></span>
+                    </div>
+
+                    <!-- Descrição dos Ingredientes -->
+                    <div class="form-group full-width">
+                        <label for="prod-descricao" class="form-label">Descrição / Ingredientes</label>
+                        <textarea id="prod-descricao" class="form-textarea" rows="3" placeholder="Pão brioche selado na manteiga, carne artesanal 160g, cheddar derretido e maionese especial..."></textarea>
+                        <span class="form-error-msg" id="error-prod-descricao"></span>
+                    </div>
+                </div>
+
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-product-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" id="btn-save-product">
+                        <span id="save-product-text">Salvar Produto</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL DE AJUSTE RÁPIDO DE ESTOQUE
+         ==================================================================== -->
+    <div class="admin-modal-backdrop hidden" id="modal-stock-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-stock-title">
+        <div class="admin-modal-box modal-box-sm">
+            <div class="admin-modal-header">
+                <div>
+                    <h3 class="admin-modal-title" id="modal-stock-title">Ajuste Rápido de Estoque</h3>
+                    <p class="admin-modal-subtitle" id="modal-stock-subtitle">Produto: X-Burguer</p>
+                </div>
+                <button type="button" class="btn-close-modal" id="btn-close-stock-modal" aria-label="Fechar modal">✕</button>
+            </div>
+
+            <form id="form-stock" class="admin-form">
+                <input type="hidden" id="stock-product-id">
+
+                <div class="form-group">
+                    <label for="stock-new-qty" class="form-label required">Nova Quantidade em Estoque</label>
+                    <div class="stock-stepper">
+                        <button type="button" class="stepper-btn" id="btn-stock-minus">-5</button>
+                        <button type="button" class="stepper-btn" id="btn-stock-minus-one">-1</button>
+                        <input type="number" id="stock-new-qty" class="form-input text-center" min="0" required>
+                        <button type="button" class="stepper-btn" id="btn-stock-plus-one">+1</button>
+                        <button type="button" class="stepper-btn" id="btn-stock-plus">+5</button>
+                    </div>
+                    <span class="form-error-msg" id="error-stock-qty"></span>
+                </div>
+
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-stock-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" id="btn-save-stock">Atualizar Estoque</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         TOAST CONTAINER PARA FEEDBACKS
+         ==================================================================== -->
+    <div id="admin-toast-container" class="admin-toast-container" aria-live="polite"></div>
+
+    <!-- Scripts do Painel Administrativo -->
+    <script th:src="@{/js/admin.js}"></script>
+</body>
+</html>
