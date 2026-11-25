@@ -35,6 +35,14 @@ public class KdsController {
     }
 
     /**
+     * Lista pedidos prontos aguardando retirada/expedição no balcão (status PRONTO).
+     */
+    @GetMapping("/pedidos-prontos")
+    public ResponseEntity<List<PedidoKdsResponseDTO>> listarPedidosProntos() {
+        return ResponseEntity.ok(pedidoService.listarPedidosProntosKds());
+    }
+
+    /**
      * Atualiza ou avança o status operacional do pedido na cozinha.
      * Caso o novo status não seja explicitado no corpo ou parâmetro, o sistema avança
      * automaticamente para o próximo estágio natural (RECEBIDO -> EM_PREPARO -> PRONTO -> ENTREGUE).

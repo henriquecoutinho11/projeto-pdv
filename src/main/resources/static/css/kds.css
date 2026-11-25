@@ -1,0 +1,561 @@
+/* ==========================================================================
+   Painel Operacional da Cozinha (KDS) - Antunes Lanches
+   Alto contraste, ergonômico para toque e leitura rápida de SLA e tags
+   ========================================================================== */
+
+.kds-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #0E0E10;
+    color: var(--color-text-primary);
+    overflow-y: auto;
+}
+
+/* Cabeçalho */
+.kds-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: 0.9rem 1.5rem;
+    background-color: #16161A;
+    border-bottom: 2px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.kds-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.kds-logo {
+    width: 44px;
+    height: 44px;
+}
+
+.kds-title {
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+}
+
+.kds-title span {
+    color: var(--color-gold);
+}
+
+.kds-subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Filtros */
+.kds-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.kds-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.kds-filter-btn:hover {
+    border-color: var(--color-gold);
+    color: var(--color-text-primary);
+}
+
+.kds-filter-btn.active {
+    background-color: var(--color-gold);
+    border-color: var(--color-gold);
+    color: #121212;
+}
+
+.kds-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: var(--radius-full);
+    background-color: rgba(0, 0, 0, 0.28);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.kds-filter-btn.active .kds-count {
+    background-color: #121212;
+    color: var(--color-gold);
+}
+
+/* Controles */
+.kds-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.kds-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    background-color: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #4ADE80;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.kds-status-pill.offline {
+    background-color: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #F87171;
+}
+
+.kds-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+    animation: kdsPulseDot 1.6s infinite ease-in-out;
+}
+
+@keyframes kdsPulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+.kds-icon-btn {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.kds-icon-btn:hover {
+    border-color: var(--color-gold);
+    background-color: var(--color-bg-surface-elevated);
+}
+
+.kds-icon-btn.muted {
+    color: var(--color-text-muted);
+}
+
+.kds-clock {
+    font-size: 1.2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-gold);
+    padding-left: 0.4rem;
+}
+
+/* Barra de Legenda SLA */
+.kds-sla-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1.5rem;
+    background-color: #141418;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.sla-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.sla-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+}
+
+.sla-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.sla-verde { background-color: #22C55E; }
+.sla-amarelo { background-color: #F59E0B; }
+.sla-vermelho { background-color: #EF4444; }
+
+.kds-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.kds-nav-link {
+    color: var(--color-gold);
+    font-weight: 700;
+    transition: opacity var(--transition-fast);
+}
+
+.kds-nav-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* Grid Principal */
+.kds-main {
+    flex: 1;
+    padding: 1.25rem 1.5rem 2rem;
+}
+
+.kds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* Card de Pedido */
+.kds-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #1A1A20;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-border);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.kds-card.sla-VERDE {
+    border-top: 6px solid #22C55E;
+}
+
+.kds-card.sla-AMARELO {
+    border-top: 6px solid #F59E0B;
+}
+
+.kds-card.sla-VERMELHO {
+    border-top: 6px solid #EF4444;
+    border-color: rgba(239, 68, 68, 0.7);
+    animation: kdsLatePulse 2s infinite ease-in-out;
+}
+
+@keyframes kdsLatePulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+    50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.35); }
+}
+
+.kds-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.1rem;
+    background-color: #22222A;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.kds-senha-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.kds-senha {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: var(--color-gold);
+    line-height: 1;
+    letter-spacing: 0.02em;
+}
+
+.kds-status-badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.kds-status-RECEBIDO {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #93C5FD;
+    border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.kds-status-EM_PREPARO {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #FCD34D;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.kds-status-PRONTO {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #86EFAC;
+    border: 1px solid rgba(34, 197, 94, 0.5);
+}
+
+.kds-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 1.05rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.kds-timer.sla-VERDE {
+    background-color: rgba(34, 197, 94, 0.16);
+    color: #4ADE80;
+}
+
+.kds-timer.sla-AMARELO {
+    background-color: rgba(245, 158, 11, 0.18);
+    color: #FBBF24;
+}
+
+.kds-timer.sla-VERMELHO {
+    background-color: rgba(239, 68, 68, 0.22);
+    color: #FCA5A5;
+}
+
+/* Meta do Cliente */
+.kds-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1.1rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.kds-cliente {
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+/* Lista de Itens */
+.kds-items {
+    list-style: none;
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.kds-item {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.kds-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.kds-item-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.kds-item-qty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 0.45rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-gold);
+    color: #121212;
+    font-size: 0.95rem;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.kds-item-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #FFFFFF;
+}
+
+/* Tags de Customização (Alto Contraste) */
+.kds-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding-left: 2.6rem;
+}
+
+.kds-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kds-tag-remocao {
+    background-color: #DC2626;
+    color: #FFFFFF;
+    border: 1px solid #FCA5A5;
+}
+
+.kds-tag-adicional {
+    background-color: #16A34A;
+    color: #FFFFFF;
+    border: 1px solid #86EFAC;
+}
+
+.kds-tag-combo {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #FDE68A;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.kds-item-obs {
+    margin-top: 0.5rem;
+    margin-left: 2.6rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 6px;
+    background-color: rgba(255, 193, 7, 0.12);
+    border-left: 3px solid var(--color-gold);
+    font-size: 0.82rem;
+    color: #FDE68A;
+    font-weight: 600;
+}
+
+/* Rodapé com Ação de 1 Toque */
+.kds-card-footer {
+    padding: 0.85rem 1.1rem;
+    background-color: #16161A;
+    border-top: 1px solid var(--color-border);
+}
+
+.kds-action-btn {
+    width: 100%;
+    min-height: 54px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: transform var(--transition-fast), filter var(--transition-fast), opacity var(--transition-fast);
+}
+
+.kds-action-btn:active {
+    transform: scale(0.97);
+}
+
+.kds-action-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.kds-btn-iniciar {
+    background: linear-gradient(135deg, #FFC107 0%, #F59E0B 100%);
+    color: #121212;
+}
+
+.kds-btn-pronto {
+    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+    color: #FFFFFF;
+}
+
+.kds-btn-entregue {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: #FFFFFF;
+}
+
+.kds-action-btn:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+/* Estado Vazio */
+.kds-empty {
+    text-align: center;
+    padding: 5rem 1.5rem;
+    color: var(--color-text-secondary);
+}
+
+.kds-empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.kds-empty h2 {
+    font-size: 1.6rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Toast */
+.kds-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    padding: 0.9rem 1.35rem;
+    border-radius: var(--radius-sm);
+    background-color: #22222A;
+    border: 2px solid var(--color-gold);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+}
+
+.kds-toast.error {
+    border-color: #EF4444;
+    background-color: #450A0A;
+}
